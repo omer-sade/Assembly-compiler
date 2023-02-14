@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "data_struct/data_structure.c"
-#include "first_read/api/first_read.c"
+#include "first_read/first_read.c"
 #include "second_read/second_read.c"
 #include "pre_assembler/pre_assembler.c"
 
