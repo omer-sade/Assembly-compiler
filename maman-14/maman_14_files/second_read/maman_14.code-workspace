@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../../immediate-lang"
+		},
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../printer"
+		},
+		{
+			"path": "../../data_struct"
+		}
+	]
+}
