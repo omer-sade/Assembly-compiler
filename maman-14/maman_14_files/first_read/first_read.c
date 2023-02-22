@@ -63,7 +63,7 @@ void reading_file_first_time(FILE *pfile, Array *symbols_table, Array *insturcti
     if(errors_str.size > 0){
         int i;
         for(i = 0; i < errors_str.size; i++){
-            printf("%s\n", *((char *)errors_str.data + i));
+            printf("%c\n", *((char *)errors_str.data + i));
         }
         free(symbols_table->data);
         free(insturctions->data);
