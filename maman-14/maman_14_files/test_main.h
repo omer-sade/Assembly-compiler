@@ -25,3 +25,8 @@ Converts ALL remaining lines to binary.
 Reads from "pfile", writes binary language to "p_outputFile"
 */
 void reading_file_second_time(FILE *pfile, Array *symbols_table, Array *insturctions, FILE *p_outputFile);
+
+/*
+adds all the 16 types of instructions to the instructions array (mov, not, jmp, etc..)
+*/
+void add_data(Array instructions);
