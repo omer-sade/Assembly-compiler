@@ -5,7 +5,8 @@ int main(){
     /*
     opening origin file
     */
-    FILE *pfile = fopen("test_file.txt", "w");
+    FILE *pfile = fopen("test_file.txt", "r");
+    
     
     if (pfile == NULL) {
         printf("Could not open file. Terminating program\n");
@@ -25,7 +26,6 @@ int main(){
     /*
     randomly chose 100. probably will need to change
     (see page 42 in instructions file)
-    being used as a hashMap. even indexes are keys, odd indexes that follows are values
     */
     Array symbols_table;
     initArray(&symbols_table, sizeof(char[100]));
@@ -35,33 +35,54 @@ int main(){
     16 total. 
     havent created yet.
     */
-    Array insturctions;
-    initArray(&insturctions, sizeof(char[10]));
-
-
-
+    Array instructions;
+    initArray(&instructions, sizeof(char[10]));
+    add_data(instructions);
+    
+    
+    
     
     /*
     opening all macros
     */
     pfile = preAssembler(pfile);
-    printf("line 64 in test_main\n");
 
     /*
     reading file for the first time 
     */
-    reading_file_first_time(pfile, &symbols_table, &insturctions, p_outputFile);
-    printf("line 70 in test_main\n");
+    reading_file_first_time(pfile, &symbols_table, &instructions, p_outputFile);
 
     /*
     reading file for the second time 
     */
-    reading_file_second_time(pfile, &symbols_table, &insturctions, p_outputFile);
+    reading_file_second_time(pfile, &symbols_table, &instructions, p_outputFile);
 
 
     fclose(p_outputFile);
     fclose(pfile);
 
     free(symbols_table.data);
-    free(insturctions.data);
+    free(instructions.data);
+    
+    }
+
+    void add_data(Array instructions){
+        int size = sizeof(char[10]);
+
+        addArray(&instructions, "mov",  size);
+        addArray(&instructions, "cmp",  size);
+        addArray(&instructions, "add",  size);
+        addArray(&instructions, "sub",  size);
+        addArray(&instructions, "lea",  size);
+        addArray(&instructions, "not",  size);
+        addArray(&instructions, "clr",  size);
+        addArray(&instructions, "inc",  size);
+        addArray(&instructions, "dec",  size);
+        addArray(&instructions, "jmp",  size);
+        addArray(&instructions, "bne",  size);
+        addArray(&instructions, "red",  size);
+        addArray(&instructions, "prn",  size);
+        addArray(&instructions, "jsr",  size);
+        addArray(&instructions, "rts",  size);
+        addArray(&instructions, "stop",  size);
     }
