@@ -4,19 +4,24 @@
 name of a macro already in the system*/
 int is_macro(char *str);
 
-/*function that is given a idx of a macro and puts the content of the
-macro in the output file*/
-void put_mcr(FILE *orig_file, FILE *output_file, int mcr_idx);
-
 /*func that adds a creates a new macro and adds it to the arr of macros*/
-void add_word(char *word, int start, int end);
+void add_word(char *word, char *cont);
 
-/*the main function that runs the preassembler proccess*/
+/*function that adds string to another string (dynamically).*/
+void append_string(char **str, const char *suffix);
+
+/*function used to free the content fields of the macros*/
+void free_mcr_cont();
+
+/*the main function that runs the preassembler process*/
 void pre_assembler(FILE *file, FILE *output_file);
+
+/*The function creates the output file, 
+runs the calls the preassembler to run and free all allocated memory*/
+FILE *preAssembler(FILE *fp);
 
 struct Macro {
 	char word[MAX_LINE];
-	int start_bit;
-	int end_bit;
+	char *content;
 };
 

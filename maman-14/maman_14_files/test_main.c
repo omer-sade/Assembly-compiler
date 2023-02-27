@@ -16,6 +16,7 @@ int main(){
     /*
     the file we eventually return. Contains binary numbers. 
     */
+
     FILE *p_outputFile = fopen("output_file.txt","w");
     if (p_outputFile == NULL) {
         printf("Error: Could not open file.\n");
