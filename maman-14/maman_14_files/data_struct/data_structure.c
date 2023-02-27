@@ -65,7 +65,7 @@ int cmpStr(const void *a, const void *b) {
 
 /*
 
-EXAMPLE FOR 'MAIN' - HOW TO USE THE DATA STRUCTURE WE CREATED.
+//EXAMPLE FOR 'MAIN' - HOW TO USE THE DATA STRUCTURE WE CREATED.
 
 
 int main() {
@@ -98,3 +98,4 @@ int main() {
 }
 
 */
+

@@ -64,26 +64,25 @@ int main(){
 
     free(symbols_table.data);
     free(instructions.data);
-    
-    }
+}
 
-    void add_data(Array instructions){
-        int size = sizeof(char[10]);
+void add_data(Array instructions){
+    int size = sizeof(char[10]);
 
-        addArray(&instructions, "mov",  size);
-        addArray(&instructions, "cmp",  size);
-        addArray(&instructions, "add",  size);
-        addArray(&instructions, "sub",  size);
-        addArray(&instructions, "lea",  size);
-        addArray(&instructions, "not",  size);
-        addArray(&instructions, "clr",  size);
-        addArray(&instructions, "inc",  size);
-        addArray(&instructions, "dec",  size);
-        addArray(&instructions, "jmp",  size);
-        addArray(&instructions, "bne",  size);
-        addArray(&instructions, "red",  size);
-        addArray(&instructions, "prn",  size);
-        addArray(&instructions, "jsr",  size);
-        addArray(&instructions, "rts",  size);
-        addArray(&instructions, "stop",  size);
-    }
+    addArray(&instructions, "mov",  size);
+    addArray(&instructions, "cmp",  size);
+    addArray(&instructions, "add",  size);
+    addArray(&instructions, "sub",  size);
+    addArray(&instructions, "lea",  size);
+    addArray(&instructions, "not",  size);
+    addArray(&instructions, "clr",  size);
+    addArray(&instructions, "inc",  size);
+    addArray(&instructions, "dec",  size);
+    addArray(&instructions, "jmp",  size);
+    addArray(&instructions, "bne",  size);
+    addArray(&instructions, "red",  size);
+    addArray(&instructions, "prn",  size);
+    addArray(&instructions, "jsr",  size);
+    addArray(&instructions, "rts",  size);
+    addArray(&instructions, "stop",  size);
+}
