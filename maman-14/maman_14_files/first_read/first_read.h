@@ -79,12 +79,23 @@ void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_out
 
 
 
+
+/*function that converts a positive decimal to binary*/
 char *pos_to_binary(unsigned int num, int bit_count);
 
+/*function that converts a negative decimal to binary*/
 char *neg_to_binary(int num, int bit_count);
 
+/*function that converts a decimal number to a binary number with given (size) number of bits*/
 char* decimalToBinary(int decimalNum, int size);
 
 
 /*function that gets a opecode and returns its binary value*/
 void opecode_to_binary(Array *arr, void *element);
+
+/*function for addressing type 3 (register addressing).
+The function gets an origin register and or destination register 
+and returns the binary word.
+if you only have destination register (for example), the origin register will be NULL.
+Example: registers_addressing(NULL, "r5")*/
+char* registers_addressing(char* orig_reg, char* dest_reg);
