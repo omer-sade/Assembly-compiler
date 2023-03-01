@@ -63,24 +63,25 @@ int cmpStr(const void *a, const void *b) {
 }
 
 
+
 /*
-
 //EXAMPLE FOR 'MAIN' - HOW TO USE THE DATA STRUCTURE WE CREATED.
-
 
 int main() {
     Array arr;
-    initArray(&arr, sizeof(int));
-    int a = 1, b = 2, c = 3;
-    
-    addArray(&arr, &a, sizeof(int));
-    addArray(&arr, &b, sizeof(int));
-    addArray(&arr, &c, sizeof(int));
+    initArray(&arr, sizeof(char[10]));
+    //int a = 1, b = 5, c = 3;
+    char str1[] = "abc";
+    char str2[] = "rber";
+    char str3[] = "refs";
+    addArray(&arr, str1, sizeof(char[10]));
+    addArray(&arr, str2, sizeof(char[10]));
+    addArray(&arr, str3, sizeof(char[10]));
 
     
     
      int target = 2;
-     int index = searchArray(&arr, &target, sizeof(int), cmpInt);
+     int index = searchArray(&arr, &target, sizeof(char[10]), cmpStr);
      printf("index = %d\n", index);
 
       if (index != -1) {
@@ -89,13 +90,11 @@ int main() {
         printf("Not found\n");
     }
 
-    printf("arr[0] = %d\n", *(int*)arr.data);
-    printf("arr[1] = %d\n", *(int*)arr.data + 1);
+    printf("arr[0] = %s\n", ((char*)arr.data)[0]);
+    printf("arr[1] = %s\n", ((char*)arr.data)[1]);
 
      free(arr.data);
   
     return 0;
 }
-
 */
-

@@ -53,7 +53,7 @@ void reading_file_first_time(FILE *pfile, Array *symbols_table, Array *insturcti
        }
 
         int num_binary_lines = calc_binary_lines_num(line);
-        create_binary_from_line(line, num_binary_lines, p_outputFile);
+        create_binary_from_line(line, num_binary_lines, p_outputFile, insturctions);
         IC += num_binary_lines;
     }
     
@@ -116,6 +116,81 @@ int calc_binary_lines_num(const char *line){
     return -1;
 }
 
-void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile){
+char *pos_to_binary(unsigned int num, int bit_count) {
+    // Allocate memory for the binary string
+    char *binary = (char*)malloc(bit_count + 1);
+    if (binary == NULL) {
+        printf("Error: Failed to allocate memory.\n");
+        return NULL;
+    }
+    // Convert the number to binary
+    int i;
+    for (i = 0; i < bit_count; i++) {
+        binary[i] = '0';
+    }
+    int pos = bit_count - 1;
+    while (num != 0 && pos >= 0) {
+        if (num & 1) {
+            binary[pos] = '1';
+        }
+        num = num >> 1;
+        pos--;
+    }
+    // Return the binary string
+    binary[bit_count] = '\0';
+    return binary;
+}
+
+char *neg_to_binary(int num, int bit_count) {
+    // Allocate memory for the binary string
+    char *binary = (char*)malloc(bit_count + 1);
+    if (binary == NULL) {
+        printf("Error: Failed to allocate memory.\n");
+        return NULL;
+    }
+    // Convert the number to binary using 2's complement
+    int i;
+    for (i = 0; i < bit_count; i++) {
+        binary[i] = '0';
+    }
+    int pos = bit_count - 1;
+    while (num != 0 && pos >= 0) {
+        if (num & 1) {
+            binary[pos] = '1';
+        }
+        num = num >> 1;
+        pos--;
+    }
+    if (pos >= 0) {
+        binary[pos] = '1';
+        pos--;
+        while (pos >= 0) {
+            binary[pos] = '0';
+            pos--;
+        }
+    }
+    // Return the binary string
+    binary[bit_count] = '\0';
+    return binary;
+}
+
+
+char* decimalToBinary(int decimalNum, int size) {
+    if (decimalNum >= 0) {
+        printf("\ntest1\n");
+        return pos_to_binary(decimalNum, size);
+    } else {
+        printf("\ntest2\n");
+        return neg_to_binary(decimalNum, size);
+    }
+}
+
+void opecode_to_binary(Array *arr, void *element){
+    int num;
+    num = searchArray(arr,element,sizeof(char[50]), cmpStr);
+    printf("num = %d\n", num);
+}
+
+void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile, Array *insturctions){
     
 }

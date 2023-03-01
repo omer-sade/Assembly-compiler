@@ -39,6 +39,7 @@ int main(){
     Array instructions;
     initArray(&instructions, sizeof(char[10]));
     add_data(instructions);
+
     
     
     
@@ -47,6 +48,14 @@ int main(){
     opening all macros
     */
     pfile = preAssembler(pfile);
+
+
+
+    //char str[] = "bne";
+    //opecode_to_binary(&instructions, str);
+
+
+
 
     /*
     reading file for the first time 
