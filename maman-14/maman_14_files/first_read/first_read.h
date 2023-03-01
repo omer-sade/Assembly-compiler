@@ -1,5 +1,4 @@
 
-
 /*
 max line size in origin file
 */
@@ -76,5 +75,16 @@ writes binary numbers to output file based on current line.
 ex: "prn #-5": writes | 00001100000000 |  in output file.
                       | 11111111101100 |
 */
-void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile);
+void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile, Array *insturctions);
 
+
+
+char *pos_to_binary(unsigned int num, int bit_count);
+
+char *neg_to_binary(int num, int bit_count);
+
+char* decimalToBinary(int decimalNum, int size);
+
+
+/*function that gets a opecode and returns its binary value*/
+void opecode_to_binary(Array *arr, void *element);

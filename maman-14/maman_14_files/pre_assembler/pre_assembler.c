@@ -7,8 +7,7 @@
 below here is bar's code
 */
 
-/*array of all the macros*/
-struct Macro *mcr_arr = NULL;
+struct Macro *mcr_arr = NULL;/*array of all the macros*/
 
 int mcr_arr_len = 0;/*number of macros in this array*/
 int mcr_arr_size = 0;/*macro array alloc size*/
