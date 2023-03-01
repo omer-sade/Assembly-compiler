@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "first_read.h"
 
 
@@ -177,10 +178,8 @@ char *neg_to_binary(int num, int bit_count) {
 
 char* decimalToBinary(int decimalNum, int size) {
     if (decimalNum >= 0) {
-        printf("\ntest1\n");
         return pos_to_binary(decimalNum, size);
     } else {
-        printf("\ntest2\n");
         return neg_to_binary(decimalNum, size);
     }
 }
@@ -189,6 +188,37 @@ void opecode_to_binary(Array *arr, void *element){
     int num;
     num = searchArray(arr,element,sizeof(char[50]), cmpStr);
     printf("num = %d\n", num);
+}
+
+char* registers_addressing(char* orig_reg, char* dest_reg) {
+    char *final_line = malloc(sizeof(char) * 14);
+    char* reg_part1;
+    char* reg_part2;
+    if(orig_reg == NULL) {
+        /*only destination register exists*/
+        reg_part1 = decimalToBinary(atoi(&dest_reg[1]),6);
+        strcat(final_line,reg_part1); /*adds the dest reg binary value*/
+        strcat(final_line,"000000"); /* no orig reg */
+        strcat(final_line,"00"); /*A,R,E value*/
+        return final_line;
+    }
+    else if(dest_reg == NULL) {
+        /*only origin register exists*/
+        reg_part2 = decimalToBinary(atoi(&orig_reg[1]),6);
+        strcat(final_line,"000000"); /* no dest reg */
+        strcat(final_line,reg_part2); /*adds the orig reg binary value*/
+        strcat(final_line,"00"); /*A,R,E value*/
+        return final_line;
+    }
+    else {
+        /*both registers exists*/
+        reg_part1 = decimalToBinary(atoi(&dest_reg[1]),6);
+        reg_part2 = decimalToBinary(atoi(&orig_reg[1]),6);
+        strcat(final_line,reg_part1); /*adds the dest reg binary value*/
+        strcat(final_line,reg_part2); /*adds the orig reg binary value*/
+        strcat(final_line,"00"); /*A,R,E value*/
+        return final_line;
+    }
 }
 
 void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile, Array *insturctions){
