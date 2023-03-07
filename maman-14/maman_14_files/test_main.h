@@ -19,15 +19,15 @@ Function that analyzes origin file for first time. Translates lines to binary if
 save symbols (that will be translated to binary in the second read).
 Reads from "pfile", writes binary language to "p_outputFile"
 */
-void reading_file_first_time(Array *symbols_table, Array *insturctions, FILE *p_outputFile);
+void reading_file_first_time(Array *symbols_table, char instructions[][LINE_SIZE], FILE *p_outputFile);
 
 /*
 Converts ALL remaining lines to binary. 
 Reads from "pfile", writes binary language to "p_outputFile"
 */
-void reading_file_second_time(Array *symbols_table, Array *insturctions, FILE *p_outputFile);
+void reading_file_second_time(Array *symbols_table, char instructions[][LINE_SIZE], FILE *p_outputFile);
 
 /*
 adds all the 16 types of instructions to the instructions array (mov, not, jmp, etc..)
 */
-void add_data(Array *instructions);
+void add_data(char instructions[][LINE_SIZE]);
