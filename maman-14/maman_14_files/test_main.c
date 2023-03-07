@@ -5,20 +5,21 @@ int main(){
     /*
     opening origin file
     */
-    FILE *pfile = fopen("test_file.txt", "r");
+    FILE *p_input_file;
+    p_input_file = fopen("test_file.txt", "r");
     
     
-    if (pfile == NULL) {
+    if (p_input_file == NULL) {
         printf("Could not open file. Terminating program\n");
         return 1;
     }
 
     /*
-    the file we eventually return. Contains binary numbers. 
+    the file with all macros expanded. 
     */
-
-    FILE *p_outputFile = fopen("output_file.txt","w");
-    if (p_outputFile == NULL) {
+    FILE *p_file_open_macros;
+    p_file_open_macros = fopen("file_open_macros.txt","w");
+    if (p_file_open_macros == NULL) {
         printf("Error: Could not open file.\n");
         return 1;
     }
@@ -38,60 +39,55 @@ int main(){
     */
     Array instructions;
     initArray(&instructions, sizeof(char[10]));
-    add_data(instructions);
-
-    
-    
-    
+    add_data(&instructions);
     
     /*
     opening all macros
     */
-    pfile = preAssembler(pfile);
+    pre_assembler(p_input_file, p_file_open_macros);
 
 
-
-    //char str[] = "bne";
-    //opecode_to_binary(&instructions, str);
-
-
-
+    fclose(p_file_open_macros);
+    p_file_open_macros = fopen("file_open_macros.txt","r");
 
     /*
     reading file for the first time 
     */
-    reading_file_first_time(pfile, &symbols_table, &instructions, p_outputFile);
+    reading_file_first_time(&symbols_table, &instructions, p_file_open_macros);
+
+    
+
 
     /*
     reading file for the second time 
     */
-    reading_file_second_time(pfile, &symbols_table, &instructions, p_outputFile);
+    reading_file_second_time(&symbols_table, &instructions, p_file_open_macros);
 
 
-    fclose(p_outputFile);
-    fclose(pfile);
-
+    fclose(p_file_open_macros); 
     free(symbols_table.data);
     free(instructions.data);
-}
+    
+    }
 
-void add_data(Array instructions){
-    int size = sizeof(char[10]);
+    void add_data(Array *instructions){
+        int size = sizeof(char[10]);
 
-    addArray(&instructions, "mov",  size);
-    addArray(&instructions, "cmp",  size);
-    addArray(&instructions, "add",  size);
-    addArray(&instructions, "sub",  size);
-    addArray(&instructions, "lea",  size);
-    addArray(&instructions, "not",  size);
-    addArray(&instructions, "clr",  size);
-    addArray(&instructions, "inc",  size);
-    addArray(&instructions, "dec",  size);
-    addArray(&instructions, "jmp",  size);
-    addArray(&instructions, "bne",  size);
-    addArray(&instructions, "red",  size);
-    addArray(&instructions, "prn",  size);
-    addArray(&instructions, "jsr",  size);
-    addArray(&instructions, "rts",  size);
-    addArray(&instructions, "stop",  size);
-}
+        addArray(instructions, "mov",  size);
+        addArray(instructions, "cmp",  size);
+        addArray(instructions, "add",  size);
+        addArray(instructions, "sub",  size);
+        addArray(instructions, "lea",  size);
+        addArray(instructions, "not",  size);
+        addArray(instructions, "clr",  size);
+        addArray(instructions, "inc",  size);
+        addArray(instructions, "dec",  size);
+        addArray(instructions, "jmp",  size);
+        addArray(instructions, "bne",  size);
+        addArray(instructions, "red",  size);
+        addArray(instructions, "prn",  size);
+        addArray(instructions, "jsr",  size);
+        addArray(instructions, "rts",  size);
+        addArray(instructions, "stop",  size);
+    }
+
