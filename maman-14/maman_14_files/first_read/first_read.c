@@ -569,6 +569,110 @@ int calc_binary_lines_num(const char *line){
     return -1;
 }
 
+char *pos_to_binary(unsigned int num, int bit_count) {
+    // Allocate memory for the binary string
+    char *binary = (char*)malloc(bit_count + 1);
+    if (binary == NULL) {
+        printf("Error: Failed to allocate memory.\n");
+        return NULL;
+    }
+    // Convert the number to binary
+    int i;
+    for (i = 0; i < bit_count; i++) {
+        binary[i] = '0';
+    }
+    int pos = bit_count - 1;
+    while (num != 0 && pos >= 0) {
+        if (num & 1) {
+            binary[pos] = '1';
+        }
+        num = num >> 1;
+        pos--;
+    }
+    // Return the binary string
+    binary[bit_count] = '\0';
+    return binary;
+}
+
+char *neg_to_binary(int num, int bit_count) {
+    // Allocate memory for the binary string
+    char *binary = (char*)malloc(bit_count + 1);
+    if (binary == NULL) {
+        printf("Error: Failed to allocate memory.\n");
+        return NULL;
+    }
+    // Convert the number to binary using 2's complement
+    int i;
+    for (i = 0; i < bit_count; i++) {
+        binary[i] = '0';
+    }
+    int pos = bit_count - 1;
+    while (num != 0 && pos >= 0) {
+        if (num & 1) {
+            binary[pos] = '1';
+        }
+        num = num >> 1;
+        pos--;
+    }
+    if (pos >= 0) {
+        binary[pos] = '1';
+        pos--;
+        while (pos >= 0) {
+            binary[pos] = '0';
+            pos--;
+        }
+    }
+    // Return the binary string
+    binary[bit_count] = '\0';
+    return binary;
+}
+
+
+char* decimalToBinary(int decimalNum, int size) {
+    if (decimalNum >= 0) {
+        return pos_to_binary(decimalNum, size);
+    } else {
+        return neg_to_binary(decimalNum, size);
+    }
+}
+
+void opecode_to_binary(Array *arr, void *element){
+    int num;
+    num = searchArray(arr,element,sizeof(char[50]), cmpStr);
+    printf("num = %d\n", num);
+}
+
+char* registers_addressing(char* orig_reg, char* dest_reg) {
+    char *final_line = malloc(sizeof(char) * 14);
+    char* reg_part1;
+    char* reg_part2;
+    if(orig_reg == NULL) {
+        /*only destination register exists*/
+        reg_part1 = decimalToBinary(atoi(&dest_reg[1]),6);
+        strcat(final_line,reg_part1); /*adds the dest reg binary value*/
+        strcat(final_line,"000000"); /* no orig reg */
+        strcat(final_line,"00"); /*A,R,E value*/
+        return final_line;
+    }
+    else if(dest_reg == NULL) {
+        /*only origin register exists*/
+        reg_part2 = decimalToBinary(atoi(&orig_reg[1]),6);
+        strcat(final_line,"000000"); /* no dest reg */
+        strcat(final_line,reg_part2); /*adds the orig reg binary value*/
+        strcat(final_line,"00"); /*A,R,E value*/
+        return final_line;
+    }
+    else {
+        /*both registers exists*/
+        reg_part1 = decimalToBinary(atoi(&dest_reg[1]),6);
+        reg_part2 = decimalToBinary(atoi(&orig_reg[1]),6);
+        strcat(final_line,reg_part1); /*adds the dest reg binary value*/
+        strcat(final_line,reg_part2); /*adds the orig reg binary value*/
+        strcat(final_line,"00"); /*A,R,E value*/
+        return final_line;
+    }
+}
+
 void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile){
     
 }
