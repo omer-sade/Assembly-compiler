@@ -24,4 +24,3 @@ struct Macro {
 	char word[MAX_LINE];
 	char *content;
 };
-
