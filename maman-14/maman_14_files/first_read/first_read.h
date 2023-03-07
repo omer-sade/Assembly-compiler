@@ -1,3 +1,4 @@
+#include <stdbool.h>
 
 /*
 max line size in origin file
@@ -16,7 +17,7 @@ returns true if first word in line is symbol.
 ex1: "MAIN: mov r3 ,LENGTH" --> true
 ex2: "prn #-5"              --> false
 */
-bool has_symbol(const char *line);
+bool has_symbol(const char *line, int *error_counter);
 
 
 /*
@@ -24,7 +25,7 @@ returns true if data is declared in line
 ex1: "x: .data 23" --> true
 ex2: "MAIN: mov r3 ,LENGTH" --> false
 */
-bool is_data(const char *line);
+bool is_data(const char *line, int *error_counter);
 
 
 /*
@@ -32,7 +33,7 @@ returns true if string is declared in line
 ex1: "STR: .string "abcdef"" --> true
 ex2: "MAIN: mov r3 ,LENGTH" --> false
 */
-bool is_string(const char *line);
+bool is_string(const char *line, int *error_counter);
 
 /*
 returns true if "entry" is in line
@@ -51,7 +52,7 @@ addidng symbol to symbols table. if symbol already there - doesnt add it to tabl
 to errors_str.
 updating DC. 
 */
-void addSymbol(Array *symbols_table, Array *errors_str, const char *line, int *DC);
+void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *DC);
 
 
 /*
@@ -59,9 +60,7 @@ returns true if insruction in line is valid.
 ex1: "mov r3, r4" --> true
 ex2: "sdhf r3" --> false
 */
-bool valid_instruct(const char *line,Array *insturctions);
-
-
+bool valid_instruct(const char *line, char instructions[][LINE_SIZE], int *error_counter);
 /*
 returns the number of binary lines needed to represent current line.
 ex: "prn #-5" is | 00001100000000 | so output is 2. 
@@ -75,27 +74,10 @@ writes binary numbers to output file based on current line.
 ex: "prn #-5": writes | 00001100000000 |  in output file.
                       | 11111111101100 |
 */
-void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile, Array *insturctions);
+void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile);
 
 
-
-
-/*function that converts a positive decimal to binary*/
-char *pos_to_binary(unsigned int num, int bit_count);
-
-/*function that converts a negative decimal to binary*/
-char *neg_to_binary(int num, int bit_count);
-
-/*function that converts a decimal number to a binary number with given (size) number of bits*/
-char* decimalToBinary(int decimalNum, int size);
-
-
-/*function that gets a opecode and returns its binary value*/
-void opecode_to_binary(Array *arr, void *element);
-
-/*function for addressing type 3 (register addressing).
-The function gets an origin register and or destination register 
-and returns the binary word.
-if you only have destination register (for example), the origin register will be NULL.
-Example: registers_addressing(NULL, "r5")*/
-char* registers_addressing(char* orig_reg, char* dest_reg);
+/*
+returns true if there are only white charachters in line
+*/
+bool is_empty(const char *line);
