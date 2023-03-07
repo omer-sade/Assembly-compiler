@@ -3,23 +3,13 @@
 #include <string.h>
 #include "pre_assembler.h"
 
-/*
-below here is bar's code
-*/
 
-struct Macro *mcr_arr = NULL;/*array of all the macros*/
+/*array of all the macros*/
+struct Macro *mcr_arr = NULL;
 
 int mcr_arr_len = 0;/*number of macros in this array*/
 int mcr_arr_size = 0;/*macro array alloc size*/
 
-/*FUNCTION JUST FOR TESTING, REMOVE WHEN DONE*/
-void print_array() {
-	int i;
-    for (i = 0; i < mcr_arr_len; i++) {
-        printf("my_string: %s\n", mcr_arr[i].word);
-        printf("content: %s\n\n", mcr_arr[i].content);
-    }
-}
 
 void free_mcr_cont() {
 	int i;
@@ -109,17 +99,8 @@ void pre_assembler(FILE *file, FILE *output_file) {
 	}
 	fseek(output_file, 0, SEEK_SET); /*set the new file ptr to the beginning*/
 	fclose(file);
-}
-
-FILE *preAssembler(FILE *fp){
-   
-	FILE *output_file;
-	output_file = fopen("output_file.txt", "w");
-    	if (output_file == NULL) {
-        	printf("Error opening files\n");
-    	}
-	pre_assembler(fp, output_file);
+	
 	free_mcr_cont();
 	free(mcr_arr);
-    return output_file;
+
 }
