@@ -3,7 +3,7 @@
 #include "first_read.h"
 
 
-void reading_file_first_time(Array *symbols_table, Array *insturctions, FILE *p_outputFile){
+void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE], FILE *p_outputFile){
     
     int DC = 0, IC = 0;
     
@@ -11,28 +11,25 @@ void reading_file_first_time(Array *symbols_table, Array *insturctions, FILE *p_
     every time we find an error - increment by 1. at the end if its value isnt 0 - stop the code. 
     */
     int error_counter = 0;
-    
-    
+ 
     /*
     changes to true if symbol is found in line
     */
     bool is_symbol_found = false;
-    
-    
     
     /*
     starting to read from file
     */
     char line[LINE_SIZE];
     while(fgets(line, sizeof(line), p_outputFile) != NULL){
-       /*
-       printf("line: %s\n", line);
-       */
        
         if(has_symbol(line, &error_counter))
             is_symbol_found = true;
         
-        if(is_data(line, &error_counter) || is_string(line, &error_counter)){
+        bool isData = is_data(line, &error_counter);
+        bool isString = is_string(line, &error_counter);
+
+        if(isData || isString){
             if(is_symbol_found){
                 addSymbol(symbols_table, &error_counter, line, &DC);
             
@@ -52,12 +49,16 @@ void reading_file_first_time(Array *symbols_table, Array *insturctions, FILE *p_
        if(is_symbol_found){
             addSymbol(symbols_table, &error_counter, line, &IC);
        }
-       if(!valid_instruct(line, insturctions)){
-            char *msg = "Invalid instruction in line:\n";
-            printf("%s\n", msg);
-            printf("%s\n",line);
-            error_counter ++;
+       /*
+       if there's no data, no string declaration in line --> it has opcode
+       */
+        if(!is_empty(line) && !isData && !isString){
+            if(!valid_instruct(line, insturctions, &error_counter)){
+                printf("Invalid syntax in line: %s\n", line);
+                error_counter ++;
        }
+        }
+       
 
         int num_binary_lines = calc_binary_lines_num(line);
         create_binary_from_line(line, num_binary_lines, p_outputFile);
@@ -69,7 +70,6 @@ void reading_file_first_time(Array *symbols_table, Array *insturctions, FILE *p_
     */
     if(error_counter > 0){
         free(symbols_table->data);
-        free(insturctions->data);
         fclose(p_outputFile);
         exit(1);
     
@@ -438,7 +438,15 @@ bool is_data(const char *line, int *error_counter)
     
    
     
-
+bool is_empty(const char *line){
+    int i; 
+    for(i = 0; i < strlen(line); i++){
+        if(!isspace(line[i])){
+            return false;
+        }
+    }
+    return true;
+}
     
 
 
@@ -560,8 +568,103 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
     */
 }
 
-bool valid_instruct(const char *line,Array *insturctions){
+bool valid_instruct(const char *line, char instructions[][LINE_SIZE], int *error_counter){
     
+    /*
+    1. check if there's a symbol in line (if there's a ":")
+    2. if there is: find its index and loop from one index after it until end of instruction
+    3. now we have start index and end index of instruction. we skip white chars before the instruction
+    4. save it as a string of its own(?) and check if it is in instructions array
+    */
+   
+   
+   /*
+   checking if there's a colon in line (if there is --> we have a symbol in line)
+   */
+   int colon_index = -1;
+   int i;
+   for (i = 0; i < strlen(line); i++){
+        if(line[i] == 58){
+            colon_index = i;
+            break;
+        }
+   }
+   /*
+   if we didnt find a colon (symbol): start searching at index 0
+   */
+   bool found_char = false;
+   int start_index = -1;
+    if(colon_index == -1){
+        for(i = 0; i < strlen(line); i++){
+            if(isspace(line[i]) && !found_char)
+                continue;
+            if(!found_char)
+                start_index = i;
+            found_char = true;
+
+            if(isspace(line[i]) && found_char){
+                break;
+            }
+            if(!(line[i] >=65 && line[i] <= 90) && !(line[i] >= 97 && line[i] <= 122)){
+                return false;
+            }
+        }
+    }
+    /*
+    found a colon --> start search at index ("colon_index" + 1)
+    */
+    else{
+        for(i = (colon_index+1); i < strlen(line); i++){
+            if(isspace(line[i]) && !found_char)
+                continue;
+            if(!found_char)
+                start_index = i;
+            found_char = true;
+
+            if(isspace(line[i]) && found_char){
+                break;
+            }
+            if(!(line[i] >=65 && line[i] <= 90) && !(line[i] >= 97 && line[i] <= 122)){
+                return false;
+            }
+        }
+    }
+    int end_index = i;
+    
+    /*
+    now we have start and end index of op code in line. start index is first char, end index is space/tab after op code
+    now we need to copy substring to new variable and search it in symbols table
+    */
+    
+    char *opcode = malloc(end_index - start_index + 2);
+
+    /*
+    copy substring to copy string
+    */ 
+    for (int i = start_index; i <= end_index -1; i++) {
+        opcode[i - start_index] = line[i];
+    }
+    opcode[end_index - start_index] = '\0'; 
+    
+    
+    /*
+    now we need just to check if opcode is in symbols table
+    */
+    int index = -1;
+    for (i = 0; i < 16; i++){
+         if (strcmp(instructions[i], opcode) == 0) {
+            index = i;
+            break;
+        }
+    }
+    
+    if(index == -1){
+        return false;
+    }
+
+
+
+    free(opcode); 
     return true;
 }
 
