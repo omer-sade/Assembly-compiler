@@ -5,28 +5,29 @@
 
 void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE], FILE *p_outputFile){
     
-    int DC = 0, IC = 0;
-    
+    int DC = 0, IC = 0; 
     /*
     every time we find an error - increment by 1. at the end if its value isnt 0 - stop the code. 
     */
     int error_counter = 0;
- 
     /*
     changes to true if symbol is found in line
     */
-    bool is_symbol_found = false;
-    
+    bool is_symbol_found = false;    
     /*
     starting to read from file
     */
     char line[LINE_SIZE];
     while(fgets(line, sizeof(line), p_outputFile) != NULL){
         
+        if(is_empty(line))
+            continue;
         /*
         for tracking errors in specific line
         */
         int current_error_num = error_counter;
+        
+        is_symbol_found = false;
         
         if(has_symbol(line, &error_counter))
             is_symbol_found = true;
@@ -37,7 +38,7 @@ void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE
         if(isData || isString){
             if(is_symbol_found){
                 addSymbol(symbols_table, &error_counter, line, &DC);
-            
+                continue;
             }
            
         }
@@ -67,8 +68,6 @@ void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE
                 }
             }
         }
-        
-       
 
         int num_binary_lines = calc_binary_lines_num(line);
         create_binary_from_line(line, num_binary_lines, p_outputFile);
@@ -111,7 +110,10 @@ bool has_symbol(const char *line, int *error_counter){
        if(line[i] == ':')
             colon_counter ++;
     }
-    
+    if(colon_counter == 0)
+        return false;
+
+
     if(colon_counter > 1){
         printf("Invalid syntax, only 1 colon allowed - %s\n", line);
         *error_counter = *error_counter + 1;
@@ -622,17 +624,58 @@ bool is_entry(const char *line, int *error_counter){
     return true;
  }
 
+void find_symbol_indexes(const char *line, int  *start_index, int *end_index){
+    int i;
+    for(i = 0; i < strlen(line); i++){
+        if(isspace(line[i]))
+            continue;
+        break;
+    }
+    *start_index = i;
 
+    for(i = *start_index +1 ; i < strlen(line); i++){
+        if(isspace(line[i]))
+            break;
+    }
+    *end_index = i;
+}
 
 void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *DC){
-    int i; 
-    /*
+    
+   /*
     1. find symbol in line and save it as a variable
     2. search that symbol in symbol table
     3. if found - print error message
     4. else - add symbol
     */
+
+    int start_index = 0;
+    int end_index = 0;
+    find_symbol_indexes(line, &start_index, &end_index);
+
+    char symbol[LINE_SIZE + 1]; // define a character array with a fixed maximum length
+
+    // Copy substring to 'symbol' string
+    int i;
+    for (i = start_index; i <= end_index - 1; i++) {
+        symbol[i - start_index] = line[i];
+    }
+    symbol[i - start_index] = '\0';
+
+    int index = searchArray(symbols_table, &symbol, sizeof(char[10]), cmpStr);
+
+    if (index == -1)
+        addArray(symbols_table, &symbol, sizeof(char[10]));
+    else {
+        printf("Error: multiple definitions of symbol '%s'\n", symbol);
+        *error_counter = *error_counter + 1;
+    }
 }
+
+
+   
+
+
 
 bool valid_instruct(const char *line, char instructions[][LINE_SIZE], int *error_counter){
     
