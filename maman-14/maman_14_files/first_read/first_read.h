@@ -38,13 +38,13 @@ bool is_string(const char *line, int *error_counter);
 /*
 returns true if "entry" is in line
 */
-bool is_entry(const char *line);
+bool is_entry(const char *line, int *error_counter);
 
 
 /*
 returns true if "extern" is in line
 */
- bool is_extern(const char *line);
+ bool is_extern(const char *line, int *error_counter);
 
 
 /*
