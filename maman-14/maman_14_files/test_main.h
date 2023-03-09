@@ -5,6 +5,7 @@
 
 #include "data_struct/data_structure.c"
 #include "first_read/first_read.c"
+#include "first_read/validate_input.c"
 #include "second_read/second_read.c"
 #include "pre_assembler/pre_assembler.c"
 
