@@ -81,3 +81,9 @@ void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_out
 returns true if there are only white charachters in line
 */
 bool is_empty(const char *line);
+
+/*
+returns true if this line is a comment
+(comment line starts with ";")
+*/
+bool is_comment(const char *line);
