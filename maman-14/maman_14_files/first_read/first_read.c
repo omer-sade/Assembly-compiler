@@ -20,7 +20,7 @@ void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE
     char line[LINE_SIZE];
     while(fgets(line, sizeof(line), p_outputFile) != NULL){
         
-        if(is_empty(line))
+        if(is_empty(line) || is_comment(line))
             continue;
         /*
         for tracking errors in specific line
@@ -460,6 +460,18 @@ bool is_empty(const char *line){
     return true;
 }
     
+bool is_comment(const char *line){
+    int i; 
+    for(i = 0; i < strlen(line); i++){
+        if(isspace(line[i])){
+            continue;
+        }
+        if(line[i] == 59)
+            return true;
+        else    
+            return false;
+    }
+}
 
 
 bool is_string(const char *line, int *error_counter)
