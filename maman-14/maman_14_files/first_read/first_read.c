@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "first_read.h"
 
+ bool is_valid_line_opcode(const char *line);
+
 
 void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE], FILE *p_outputFile){
     
@@ -22,6 +24,11 @@ void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE
         
         if(is_empty(line) || is_comment(line))
             continue;
+        if(is_coma_last(line)){
+            printf("Invalid syntax in line: %s\n",line);
+            error_counter++;
+            continue;
+        }
         /*
         for tracking errors in specific line
         */
@@ -62,7 +69,7 @@ void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE
        */
         if(current_error_num == error_counter){
             if(!is_empty(line) && !isData && !isString && !isEntry && !isExtern){
-                if(!valid_instruct(line, insturctions, &error_counter)){
+                if(!valid_instruct(line, insturctions, &error_counter) ||!is_valid_line_opcode(line)){
                     printf("Invalid syntax in line: %s\n", line);
                     error_counter ++;
                 }
@@ -86,6 +93,18 @@ void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE
     }
 
 
+}
+
+bool is_coma_last(const char *line){
+    int i;
+    for(i = strlen(line)-2; i > 0 ; i--){
+        char c = line[i];
+        if(isspace(line[i]))
+            continue;
+        if(line[i] == 44)
+            return true;
+        return false;
+    }
 }
 
 bool has_symbol(const char *line, int *error_counter){
@@ -171,7 +190,7 @@ bool has_symbol(const char *line, int *error_counter){
         return false;
     }
 
-       return true;
+    return true;
     }
 
 /*
@@ -706,8 +725,6 @@ bool valid_instruct(const char *line, char instructions[][LINE_SIZE], int *error
         opcode[i - start_index] = line[i];
     }
     opcode[end_index - start_index] = '\0'; 
-    
-    
     /*
     now we need just to check if opcode is in symbols table
     */
@@ -722,9 +739,6 @@ bool valid_instruct(const char *line, char instructions[][LINE_SIZE], int *error
     if(index == -1){
         return false;
     }
-
-
-
     free(opcode); 
     return true;
 }
