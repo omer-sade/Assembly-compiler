@@ -1,5 +1,4 @@
 #include <stdbool.h>
-
 /*
 max line size in origin file
 */
@@ -10,6 +9,12 @@ max length of each error message.
 ex: "you created two macros with same name" -- total 37 chars
 */
 #define error_message_len 100
+
+/*
+returns true if last char is coma
+(excluding white chars)
+*/
+bool is_coma_last(const char *line);
 
 
 /*
