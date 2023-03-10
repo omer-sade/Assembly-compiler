@@ -89,8 +89,7 @@ void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE
 }
 
 bool has_symbol(const char *line, int *error_counter){
-    
-    
+
     int i = 0;
     /*
     if this is a comment line
@@ -113,14 +112,11 @@ bool has_symbol(const char *line, int *error_counter){
     if(colon_counter == 0)
         return false;
 
-
     if(colon_counter > 1){
         printf("Invalid syntax, only 1 colon allowed - %s\n", line);
         *error_counter = *error_counter + 1;
         return false;
     }
-        
-    
     /*
     finding the colon index (":" is 58 in ascii)
     */
@@ -160,8 +156,7 @@ bool has_symbol(const char *line, int *error_counter){
             if(!found_first_char){
                 first_char_index = i;
                 found_first_char = true;
-            }
-                
+            }   
         }
    }
   
@@ -170,21 +165,13 @@ bool has_symbol(const char *line, int *error_counter){
     if error found:
     ex: line is: "gfd gf:"
     */
-
-    
-    if( last_space_index > first_char_index){
-        
-        char *message = "Invalid symbol declaration in line: ";
-       
-        printf("%s", message);
-        printf(" %s\n", line);
+    if( last_space_index > first_char_index){       
+        printf("Invalid symbol declaration in line: %s", line);
         *error_counter = *error_counter + 1;
         return false;
     }
 
        return true;
-    
-    
     }
 
 /*
@@ -214,13 +201,13 @@ bool is_only_white_chars(char temp[]){
 /*
 help function for "is data". Checks if there's a number in string
 */
-    bool is_contains_number(char str[]){
+    bool is_contains_number(char str[], int index){
         int i;
         
         if(str[0] == '\0')
             return false;
 
-        for(i = 0; i < strlen(str); i ++){
+        for(i = 0; i < index; i ++){
             
             if(isspace(str[i]))
                 continue;
@@ -233,26 +220,11 @@ help function for "is data". Checks if there's a number in string
 
 bool is_data(const char *line, int *error_counter)
 {
-    
-
-   /*
-   checking if the word ".data" is in the current line. if it is --> strstr() returns a pointer to starting index
-   ex: line = "my name is john"
-       word = "name"
-       result = "name is john"
-
-   */
     char *word = ".data";
     char *result = strstr(line, word);
     if( result == NULL){
         return false;
     }
-
-
-    /*
-    if we got here - ".data" is in line. now we need to look for syntax errors. 
-    */
-
    /*
    start_index = starting index of ".data"
    end_index = end index of ".data"
@@ -260,8 +232,6 @@ bool is_data(const char *line, int *error_counter)
     int start_index = result - line;
     int end_index = start_index + 5;
     
-   
-
     if(line[end_index] != 32 && line[end_index] != 9){
         printf("Invalid syntax in line: %s\n",line);
         *error_counter = *error_counter + 1;
@@ -362,7 +332,7 @@ bool is_data(const char *line, int *error_counter)
         if current char is number
         */
        if(isdigit(line[i])){
-            bool has_number = is_contains_number(temp);
+            bool has_number = is_contains_number(temp, temp_index);
             if(temp[0] != '\0' && has_number && !isdigit(temp[temp_index-1])){
             printf("Invalid syntax in line: %s\n", line);
             *error_counter = *error_counter + 1;
@@ -394,7 +364,6 @@ bool is_data(const char *line, int *error_counter)
         }
        }
         
-
         /*
         if current char is "+" or "-"
         */
@@ -482,19 +451,12 @@ bool is_string(const char *line, int *error_counter)
         return false;
     }
 
-
-    /*
-    if we got here - ".string" is in line. now we need to look for syntax errors. 
-    */
-
    /*
    start_index = starting index of ".string"
    end_index = end index of ".string"
    */
     int start_index = result - line;
     int end_index = start_index + 7;
-    
-   
     /*
     checking that there's a space or tab afer ".string"
     */
@@ -519,7 +481,7 @@ bool is_string(const char *line, int *error_counter)
         *error_counter = *error_counter + 1;
         return false;
     }
-        
+
 
     /*
     now we know there are exactly 2 quotation marks. 
@@ -532,9 +494,7 @@ bool is_string(const char *line, int *error_counter)
    for(i = end_index; i < strlen(line) -2; i++){
         if(isspace(line[i]))
             continue;
-        /*
-        if quotation mark isnt first - invalid syntax
-        */
+    
         if(line[i] != 34){
             printf("Invalid syntax in line: %s\n", line);
             *error_counter = *error_counter + 1;
@@ -552,10 +512,7 @@ bool is_string(const char *line, int *error_counter)
         if(isspace(line[i])){
             continue;
         }
-            
-        /*
-        if quotation mark isnt last - invalid syntax
-        */
+  
         if(line[i] != 34){
             printf("Invalid syntax in line: %s\n", line);
             *error_counter = *error_counter + 1;
@@ -565,8 +522,6 @@ bool is_string(const char *line, int *error_counter)
             break;
         }
     }
-
-
     return true;
 }
 
@@ -577,11 +532,6 @@ bool is_entry(const char *line, int *error_counter){
     if( result == NULL){
         return false;
     }
-
-
-    /*
-    if we got here - ".entry" is in line. now we need to look for syntax errors. 
-    */
 
    /*
    start_index = starting index of ".entry"
@@ -612,11 +562,6 @@ bool is_entry(const char *line, int *error_counter){
         return false;
     }
 
-
-    /*
-    if we got here - ".extern" is in line. now we need to look for syntax errors. 
-    */
-
    /*
    start_index = starting index of ".extern"
    end_index = end index of ".extern"
@@ -624,7 +569,6 @@ bool is_entry(const char *line, int *error_counter){
     int start_index = result - line;
     int end_index = start_index + 7;
     
-   
     /*
     checking that there's a space or tab afer ".extern"
     */
@@ -683,10 +627,6 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
         *error_counter = *error_counter + 1;
     }
 }
-
-
-   
-
 
 
 bool valid_instruct(const char *line, char instructions[][LINE_SIZE], int *error_counter){
