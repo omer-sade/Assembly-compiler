@@ -1,571 +1,826 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "validate_input.h"
+#include "first_read.h"
 
-bool is_valid_line_opcode(const char *line){
+ bool is_valid_line_opcode(const char *line);
 
-    int start_index =0; 
-    int end_index = 0; 
-    get_opcode_indexes(line, &start_index, &end_index);
-    char opcode[LINE_SIZE + 1]; // define a character array with a fixed maximum length
 
-    // Copy substring to 'opcode' string
-    int i;
-    for (i = start_index; i <= end_index - 1; i++) {
-        opcode[i - start_index] = line[i];
-    }
-    opcode[i - start_index] = '\0';
-   
-    int needed_operands_num = calc_needed_operands_num(opcode);
+void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE], FILE *p_outputFile){
     
-    int acuall_operands_num = calc_acuall_operands_num(line, end_index);
-    if(strcmp(opcode, "jsr") !=0 && strcmp(opcode, "bne") !=0 && strcmp(opcode, "jmp") !=0){
-        if(needed_operands_num != acuall_operands_num)
-            return false;
+    int DC = 0, IC = 0; 
+    /*
+    every time we find an error - increment by 1. at the end if its value isnt 0 - stop the code. 
+    */
+    int error_counter = 0;
+    /*
+    changes to true if symbol is found in line
+    */
+    bool is_symbol_found = false;    
+    /*
+    starting to read from file
+    */
+    char line[LINE_SIZE];
+    while(fgets(line, sizeof(line), p_outputFile) != NULL){
+        
+        if(is_empty(line) || is_comment(line))
+            continue;
+        if(is_coma_last(line)){
+            printf("Invalid syntax in line: %s\n",line);
+            error_counter++;
+            continue;
+        }
+        /*
+        for tracking errors in specific line
+        */
+        int current_error_num = error_counter;
+        
+        is_symbol_found = false;
+        
+        if(has_symbol(line, &error_counter))
+            is_symbol_found = true;
+        
+        bool isData = is_data(line, &error_counter);
+        bool isString = is_string(line, &error_counter);
+
+        if(isData || isString){
+            if(is_symbol_found){
+                addSymbol(symbols_table, &error_counter, line, &DC);
+                continue;
+            }
+           
+        }
+        bool isEntry = is_entry(line, &error_counter);
+        bool isExtern = is_extern(line, &error_counter);
+        if(isEntry || isExtern){
+            /*
+            didnt fully understand this part. this is line 9 in algorythm.
+            */
+           
+        }
+        /*
+        If we got here than line doest contain data declaration nor extern / entry declaration. 
+        Meaning it is instructions (with possibly a symbol).
+        */
+       if(is_symbol_found){
+            addSymbol(symbols_table, &error_counter, line, &IC);
+       }
+       /*
+       if there's no data, no string, no entry, no extern in line --> it has opcode
+       */
+        if(current_error_num == error_counter){
+            if(!is_empty(line) && !isData && !isString && !isEntry && !isExtern){
+                if(!valid_instruct(line, insturctions, &error_counter) ||!is_valid_line_opcode(line)){
+                    printf("Invalid syntax in line: %s\n", line);
+                    error_counter ++;
+                }
+            }
+        }
+
+        int num_binary_lines = calc_binary_lines_num(line);
+        create_binary_from_line(line, num_binary_lines, p_outputFile);
+        IC += num_binary_lines;
     }
-    
     
     /*
-    validating that operands doesnt have spaces.
-    ex: mov r 4, r 5 --> return false
+    if errors found in file, terminate program
     */
-    bool isValid = false;
-    if(strcmp(opcode, "jsr") ==0 || strcmp(opcode, "bne") ==0 || strcmp(opcode, "jmp") ==0){
-        isValid = validate_jsr_bne_jmp(line, end_index);
+    if(error_counter > 0){
+        free(symbols_table->data);
+        fclose(p_outputFile);
+        exit(1);
+    
+    
     }
-    else if(acuall_operands_num == 0)
-        isValid = check_valid_0_operand(line, end_index);
-    else if(acuall_operands_num == 1)
-        isValid = check_valid_1_operand(line,opcode, end_index);
-    else
-        isValid = check_valid_2_operand(line, opcode, end_index);
-    
-    if(!isValid)
-        return false;
-    
-    bool correct_operadns_type = validate_operands_type(line, opcode,  end_index);
-    if(!correct_operadns_type)
-        return false;
-    return true;
+
+
 }
 
-int get_index_of(const char *line, char target, int start){
-    int i; 
-    for(i = start; i < strlen(line); i++){
+bool is_coma_last(const char *line){
+    int i;
+    for(i = strlen(line)-2; i > 0 ; i--){
         char c = line[i];
-        if(line[i] == target)
-            return i;
-    }
-    return -1;
-}
-
-int count(const char *line, char target){
-    int i;
-    int count = 0;
-    for (i = 0; i < strlen(line); i++){
-        if(line[i] == target)
-            count++;
-    }
-    return count;
-}
-
-bool validate_jsr_bne_jmp(const char *line, int index){
-    
-    int coma_counter = count(line, 44); 
-    int i;
-    
-    if(coma_counter > 1)
+        if(isspace(line[i]))
+            continue;
+        if(line[i] == 44)
+            return true;
         return false;
-    
-    if(coma_counter == 0){
-        return check_valid_1_operand(line,"jmp", index);
     }
-    else{
-        int open_parnte = count(line, 40);
-        int close_parente = count(line, 41);
-        if(open_parnte != 1 && close_parente != 1)
-            return false;
-        int first_par_index = get_index_of(line, 40, index);
-        int last_par_index =  get_index_of(line, 41, index);
-        int first_char_index = get_first_char(line, index);
-        int coma_index = get_index_of(line, 44, index);
-        int last_char_index = -1;
-        for(i = first_par_index-1; i > first_char_index; i--){
-            if(isspace(line[i]))
-                return false;
-            last_char_index = i;
+}
+
+bool has_symbol(const char *line, int *error_counter){
+
+    int i = 0;
+    /*
+    if this is a comment line
+    */
+    if (line[0] == ';')
+        return false;
+
+    /*
+    counts how many ":" in line
+    */
+    int colon_counter = 0;
+
+    /*
+    checking how many ":" in line. if not 1, returns false
+    */
+    for( i = 0; i < strlen(line) ; i ++){
+       if(line[i] == ':')
+            colon_counter ++;
+    }
+    if(colon_counter == 0)
+        return false;
+
+    if(colon_counter > 1){
+        printf("Invalid syntax, only 1 colon allowed - %s\n", line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+    /*
+    finding the colon index (":" is 58 in ascii)
+    */
+    int colon_index = -1;
+    for( i = 0; i < strlen(line) ; i ++){
+        if(line[i] == 58){
+            colon_index = i;
             break;
         }
-        bool spaces_in_symbol = is_contains_spaces(line, first_char_index, last_char_index);
-        if(spaces_in_symbol)
-            return false;
-        if(!(first_par_index < last_par_index && first_par_index < coma_index && coma_index < last_par_index))
-            return false;
-        
-        /*
-        now we have to validate that there arent any spaces in first and second operands
-        */
-       int first_operand_first_char;
-       int first_operand_last_char;
-       int second_operand_first_char;
-       int second_operand_last_char;
-       for(i = first_par_index + 1; i < strlen(line); i ++){
-            if(isspace(line[i]))
-                continue;
-            first_operand_first_char = i;
-            break;
-       }
-       for(i = coma_index -1; i > first_par_index; i--){
-            if(isspace(line[i]))
-                continue;
-            first_operand_last_char = i;
-            break;
-       }
-       for(i = coma_index + 1; i < last_par_index; i++){
-            if(isspace(line[i]))
-                continue;
-            second_operand_first_char = i;
-            break;
-       }
-       for(i = last_par_index -1; i> first_par_index; i--){
-            if(isspace(line[i]))
-                continue;
-            second_operand_last_char = i;
-            break;
-       }
-       if(is_contains_spaces(line, first_char_index, last_par_index))
-            return false;
-      
     }
+    
+    if(colon_index == 0){
+        printf("Invalid syntax in line: %s\n",line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+        
+    /*
+    checking if there is space before the colon using ascii
+    */
+    if(line[colon_index-1] == 32){
+        printf("Invalid syntax in line: %s\n",line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+    /*
+    analyzing the line from index "0" to index "colon index"
+    */
+   int last_space_index = -1;
+   int first_char_index = 0;
+   bool found_first_char = false;
+
+   for(i = 0; i < colon_index; i++){
+        if(line[i] == 32)
+            last_space_index = i;
+        if((line[i] >= 97 && line[i] <= 122) || (line[i] >= 65 && line[i] <= 90) || isdigit(line[i])){
+            if(!found_first_char){
+                first_char_index = i;
+                found_first_char = true;
+            }   
+        }
+   }
+  
+    if(colon_index -  first_char_index > 30){
+        printf("Invalid symbol declaration in line (too long): %s", line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+    /*
+    if error found:
+    ex: line is: "gfd gf:"
+    */
+    if( last_space_index > first_char_index){       
+        printf("Invalid symbol declaration in line: %s", line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+
+    bool isValidSymbolName = is_valid_symbol_name(line, first_char_index, colon_index);
+    if(!isValidSymbolName){
+        printf("Invalid symbol declaration in line: %s", line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+        
+
+    return true;
+    }
+
+bool is_valid_symbol_name(const char *line, int start, int end){
+    char symbol[LINE_SIZE + 1];
+    /*
+    Copy substring to 'symbol' string
+    */ 
+    int i;
+    for (i = start; i <= end - 1; i++) {
+        symbol[i - start] = line[i];
+    }
+    symbol[i - start] = '\0';
+
+    if(strcmp(symbol, "mov") == 0)
+        return false;
+    if(strcmp(symbol, "cmp") == 0)
+        return false;
+    if(strcmp(symbol, "add") == 0)
+        return false;
+    if(strcmp(symbol, "sub") == 0)
+        return false;
+    if(strcmp(symbol, "lea") == 0)
+        return false;
+    if(strcmp(symbol, "not") == 0)
+        return false;
+    if(strcmp(symbol, "clr") == 0)
+        return false;
+    if(strcmp(symbol, "inc") == 0)
+        return false;
+    if(strcmp(symbol, "dec") == 0)
+        return false;
+    if(strcmp(symbol, "jmp") == 0)
+        return false;
+    if(strcmp(symbol, "bne") == 0)
+        return false;
+    if(strcmp(symbol, "red") == 0)
+        return false;
+    if(strcmp(symbol, "prn") == 0)
+        return false;
+    if(strcmp(symbol, "jsr") == 0)
+        return false;
+    if(strcmp(symbol, "rts") == 0)
+        return false;
+    if(strcmp(symbol, "stop") == 0)
+        return false;
+    if(strcmp(symbol, "r0") == 0)
+        return false;
+    if(strcmp(symbol, "r1") == 0)
+        return false;
+    if(strcmp(symbol, "r2") == 0)
+        return false;
+    if(strcmp(symbol, "r3") == 0)
+        return false;
+    if(strcmp(symbol, "r4") == 0)
+        return false;
+    if(strcmp(symbol, "r5") == 0)
+        return false;
+    if(strcmp(symbol, "r6") == 0)
+        return false;
+    if(strcmp(symbol, "r7") == 0)
+        return false;
     return true;
 }
 
-bool is_contains_spaces(const char *line, int start, int end){
+/*
+help function for "is_data". checking if a string contains numbers
+*/  
+bool is_number_in(char temp[]){
     int i;
-    for(i= start; i< end; i++){
-        if(isspace(line[i]))
+    for(i = 0; i < strlen(temp); i ++){
+        if(isdigit(temp[i]))
             return true;
     }
     return false;
 }
 
-int get_first_char(const char *line, int start){
-    int i; 
-    for (i=start; i<strlen(line); i++){
-        if(isspace(line[i]))
-            continue;
-        return i;
-    }
-    return -1;
-}
-
-int get_last_char(const char *line, int end){
+/*
+help function for "is_data". checking if a string contains numbers
+*/
+bool is_only_white_chars(char temp[]){
     int i;
-    for(i = end; i> 0; i--){
-        if(isspace(line[i]))
-            continue;
-        return i;
+    for(i = 0; i < strlen(temp) -2; i ++){
+        if(!isspace(temp[i]))
+            return false;
     }
-    return -1;
+    return true;
 }
 
-bool validate_operands_type(const char *line,char opcode[], int index){
-    char arr1[][5] = {"mov", "add", "sub"};
-    char arr2[][5] = {"cmp"};
-    char arr3[][5] ={"lea"};
-    char arr4[][5] = {"not", "clr", "inc", "dec", "red"};
-    char arr5[][5] = {"bne", "jsr", "jmp"};
-    char arr6[][5] = {"stop", "rts"};
-
-    int arr1_size = sizeof(arr1) / sizeof(arr1[0]);
-    int arr2_size = sizeof(arr2) / sizeof(arr2[0]);
-    int arr3_size = sizeof(arr3) / sizeof(arr3[0]);
-    int arr4_size = sizeof(arr4) / sizeof(arr4[0]);
-    int arr5_size = sizeof(arr5) / sizeof(arr5[0]);
-    int arr6_size = sizeof(arr6) / sizeof(arr6[0]);
-
-    int coma_index = get_index_of(line, 44, index);
-    int first_operand_first_char = get_first_char(line, index);
-    int first_operand_last_char;
-    int second_operand_first_char;
-    int second_operand_last_char;
-    if(coma_index != -1){
-        first_operand_last_char = get_last_char(line, coma_index-1);
-        second_operand_first_char = get_first_char(line, coma_index+1);
-        second_operand_last_char = get_last_char(line, strlen(line)-2);
-    }
-    else{
-        first_operand_last_char = get_last_char(line, strlen(line)-2);
-    }
-    
-    /*
-    2 operands, first is 0 1 3, second is 1 3
-    */
-    if(contains(arr1,arr1_size, opcode)){
-        bool isNum = is_number(line, first_operand_first_char,first_operand_last_char+1);
-        bool isSymbol = is_symbol(line, first_operand_first_char, first_operand_last_char+1);
-        bool isRegi = is_register(line, first_operand_first_char, first_operand_last_char+1);
-        if(!(isNum || isSymbol || isRegi))
-            return false;
+/*
+help function for "is data". Checks if there's a number in string
+*/
+    bool is_contains_number(char str[], int index){
+        int i;
         
-        isSymbol = is_symbol(line, second_operand_first_char, second_operand_last_char);
-        isRegi = is_register(line, second_operand_first_char,second_operand_last_char);
-        if(!(isSymbol || isRegi))
-            return false;   
-    }
-    
-    /*
-    2 operands, both are 0 1 3
-    */
-    else if(contains(arr2,arr2_size, opcode)){
-        bool isNum = is_number(line, first_operand_first_char,first_operand_last_char+1);
-        bool isSymbol = is_symbol(line, first_operand_first_char, first_operand_last_char+1);
-        bool isRegi = is_register(line, first_operand_first_char, first_operand_last_char+1);
-        if(!(isNum || isSymbol || isRegi))
+        if(str[0] == '\0')
             return false;
-        isNum = is_number(line, second_operand_first_char, second_operand_last_char+1);
-        isSymbol = is_symbol(line, second_operand_first_char, second_operand_last_char+1);
-        isRegi = is_register(line, second_operand_first_char,second_operand_last_char+1);
-        if(!(isSymbol || isRegi || isNum))
-            return false;   
-    }
-    
-    /*
-    2 operands, first is 1, second is 1 3
-    */
-    else if(contains(arr3,arr3_size, opcode)){
-        bool isSymbol = is_symbol(line, first_operand_first_char, first_operand_last_char+1);
-        if(!isSymbol)
-            return false;
-        isSymbol = is_symbol(line, second_operand_first_char, second_operand_last_char+1);
-        bool isRegi = is_register(line, second_operand_first_char,second_operand_last_char+1);
-        if(!(isSymbol || isRegi))
-            return false;
-    }
-    
-    /*
-    1 operand - 1 3
-    */
-    else if(contains(arr4,arr4_size, opcode)){
-        bool isSymbol = is_symbol(line, first_operand_first_char, first_operand_last_char+1);
-        bool isRegi = is_register(line, first_operand_first_char, first_operand_last_char+1);
-        if(!(isSymbol || isRegi))
-            return false;
+
+        for(i = 0; i < index; i ++){
+            
+            if(isspace(str[i]))
+                continue;
+            if(isdigit(str[i]))
+                return true;
         }
-    /*  
-    1 operand - 1 2 3
+        return false;
+    }
+
+
+bool is_data(const char *line, int *error_counter)
+{
+    char *word = ".data";
+    char *result = strstr(line, word);
+    if( result == NULL){
+        return false;
+    }
+   /*
+   start_index = starting index of ".data"
+   end_index = end index of ".data"
+   */
+    int start_index = result - line;
+    int end_index = start_index + 5;
+    
+    if(line[end_index] != 32 && line[end_index] != 9){
+        printf("Invalid syntax in line: %s\n",line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+    
+
+    /*
+    looping from start of line until the first index of ".data". 
+    looking for any syntax errors. we might have symbol before, so only allowed 
+    characters are letters and numbers, white characters, and 1 colon
     */
-     else if(contains(arr5,arr5_size, opcode)){
-        if(coma_index == -1){
-            bool isSymbol = is_symbol(line, first_operand_first_char, first_operand_last_char+1);
-            bool isRegi = is_register(line, first_operand_first_char, first_operand_last_char+1);
-            if(!(isSymbol || isRegi))
-                return false;
+    int i;
+    if(start_index != 0){
+        for(i = 0; i < start_index; i++){
+                if((line[i] >= 97 && line[i] <= 122) && (line[i] >= 65 && line[i] <= 90) && isdigit(line[i]) && line[i] != 58){
+                    printf("Invalid syntax in line: %s\n",line);
+                    *error_counter = *error_counter + 1;
+                    return false;
+                }
+
+            }
+    }
+    
+
+    /*
+    looping from end of ".data" to end of "line".
+    if there's any thing that isnt a space, number, coma, hyphen, plus sign --> return false
+    */
+    
+    for(i = end_index; i < strlen(line)-2; i++){
+        
+        if (line[i] == 32 || line[i] == 9 || line[i] == 10 || line[i] == '\0'){ 
+            continue;
+        }
+        if((line[i] < 48 || line[i] > 57) && line[i] != 44 && line[i] != 45 && line[i] != 43){
+            printf("Invalid syntax in line: %s\n", line);
+            *error_counter = *error_counter + 1;
+            return false;   
+        }
+    }
+    /*
+    if we got here, there are only numbers, comas, hyphens, plus signs and white characters after ".data".
+    we need to verify that everything is ok according to page 36 in pdf. 
+    */
+
+   /*
+    if coma is first return false
+   */
+   for(i = end_index; i < strlen(line) -2; i++){
+        if(isspace(line[i]))
+            continue;
+        /*
+        if coma is first - invalid syntax
+        */
+        if(line[i] == 44){
+            printf("Invalid syntax in line: %s\n", line);
+            *error_counter = *error_counter + 1;
+            return false;   
         }
         else{
-            int open_parente_index = get_index_of(line, 40,0);
-            int close_parente_index = get_index_of(line, 41, 0);
-            int coma_index = get_index_of(line, 44, 0);
-           
-            bool isNum = is_number(line, open_parente_index +1 ,coma_index);
-            bool isSymbol = is_symbol(line, open_parente_index +1 ,coma_index);
-            bool isRegi = is_register(line, open_parente_index +1 ,coma_index);
-            if(!(isNum || isSymbol || isRegi))
-                return false;
-            isSymbol = is_symbol(line, coma_index +1 ,close_parente_index);
-            isRegi = is_register(line, coma_index +1 ,close_parente_index);
-            if(!(isSymbol || isRegi))
-                return false;
+            break;
         }
     }
-    return true;
-}
 
-bool contains(char array[][5], int rows, char target[]) {
-    int i;
-    for (i = 0; i < rows; i++) {
-        if (strcmp(array[i], target) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool is_register(const char *line, int start, int end){
     /*
-    reg will be the register name
+    if coma is last return false
     */
-    char reg[LINE_SIZE + 1]; 
-
-    /*
-    Copy substring to 'reg' string
-    */ 
-    int i;
-    for (i = start; i <= end - 1; i++) {
-        reg[i - start] = line[i];
+    for(i = strlen(line) -2; i > end_index ; i--){
+        if(isspace(line[i])){
+            continue;
+        }
+            
+        /*
+        if coma is last - invalid syntax
+        */
+        if(line[i] == 44 || line[i] == 45 || line[i] == 43){
+            printf("Invalid syntax in line: %s\n", line);
+            *error_counter = *error_counter + 1;
+            return false;   
+        }
+        else{
+            break;
+        }
     }
-    reg[i - start] = '\0';
 
-    if(strcmp(reg, "r0") == 0)
-        return true;
-    if(strcmp(reg, "r1") == 0)
-        return true;
-    if(strcmp(reg, "r2")== 0)
-        return true;
-    if(strcmp(reg, "r3")== 0)
-        return true;
-    if(strcmp(reg, "r4")== 0)
-        return true;
-    if(strcmp(reg, "r5")== 0)
-        return true;
-    if(strcmp(reg, "r6")== 0)
-        return true;
-    if(strcmp(reg, "r7")== 0)
-        return true;
-    return false;
-}
-
-bool is_number (const char *line, int start, int end){
-    bool spaces = is_contains_spaces(line, start, end);
-    if(spaces)
-        return false;
+    /* "temp" holds parts from "line", used to validate line syntax in following loop*/
+    char temp[LINE_SIZE]; 
+    temp[0] = '\0';
+    int temp_index = 0;
     
     /*
-    num will be the number in line
+    looping through "line" and looking for errors
     */
-    char num[LINE_SIZE + 1]; 
-
-    /*
-    Copy substring to 'num' string
-    */ 
-    int i;
-    for (i = start; i <= end - 1; i++) {
-        num[i - start] = line[i];
-    }
-    num[i - start] = '\0';
-
-    if(num[0] != 35)
-        return false;
+    for(i = end_index; i < strlen(line) - 2; i++){
     
-    if(num[1] != 43 && num[1] != 45 && !isdigit(num[1]))
-        return false;
-    
-    if(isdigit(num[1])){
-        for(i = 1; i < strlen(num) -2; i++){
-            if(!isdigit(line[i]))
-                return false;
+        /*
+        if current char is number
+        */
+       if(isdigit(line[i])){
+            bool has_number = is_contains_number(temp, temp_index);
+            if(temp[0] != '\0' && has_number && !isdigit(temp[temp_index-1])){
+            printf("Invalid syntax in line: %s\n", line);
+            *error_counter = *error_counter + 1;
+            return false;
+            }
+            else{
+                temp[temp_index] = line[i];
+                temp_index++;
+            }
+       }
+        
+        
+        /*
+        if current char is space
+        */
+       else if( line[i] == 32 || line[i] == 9){
+            if(temp[0] == '\0'){
+            temp[temp_index] = line[i];
+            temp_index++;
         }
-    }
-    else{
-        for(i = 2; i < strlen(num)-2; i++){
-            if(!isdigit(line[i]))
-                return false;
+            else if (temp[0] != '\0' && (isdigit(temp[temp_index-1]) || temp[temp_index-1] == 32 || temp[temp_index-1] == 9)  ){
+            temp[temp_index] = line[i];
+            temp_index++;
         }
-    }
-    return true;
-
-
-}
-
-bool is_symbol (const char *line, int start, int end){
-    if(is_register(line, start,end))
-        return false;
-    bool hasSpaces = is_contains_spaces(line, start, end);
-    if(hasSpaces)
-        return false;
-    if(!((line[start] >= 65 && line[start] <= 90) || (line[start] >= 97 && line[start] <= 122))){
-        return false;
-    }
-    int i; 
-    for( i = start; i < end; i++){
-        if(!((line[i] >= 48 && line[i] <= 57) || (line[i] >= 65 && line[i] <= 90) || (line[i] >= 97 && line[i] <= 122))){
+            else{
+            printf("Invalid syntax in line: %s\n", line);
+            *error_counter = *error_counter + 1;
             return false;
         }
+       }
+        
+        /*
+        if current char is "+" or "-"
+        */
+       else if(line[i] == 43 || line[i] == 45){
+            if(temp[0] == '\0'){
+                temp[temp_index] = line[i];
+                temp_index++;
+            }
+            else if(temp[0] != '\0' && is_only_white_chars(temp)){
+                temp[temp_index] = line[i];
+                temp_index++;
+            }
+            else{
+                printf("Invalid syntax in line: %s\n", line);
+                *error_counter = *error_counter + 1;
+                return false;
+            }
+       }
+       
+    
+        /*
+        if current char is ","
+        */
+       else{
+            if(temp[0] == '\0'){
+            printf("Invalid syntax in line: %s\n", line);
+            *error_counter = *error_counter + 1;
+            return false;
+            }
+            else if(temp[0] != '\0' && !is_number_in(temp)){
+                printf("Invalid syntax in line: %s\n", line);
+                *error_counter = *error_counter + 1;
+                return false;
+            }
+            else{
+                int j;
+                for(j =0; j<= temp_index ; j ++){
+                    temp[j] = '\0';
+                }
+                temp_index = 0;
+            }
+       }      
     }
-    return true;
-}
-
-int calc_acuall_operands_num(const char *line, int index){
-    int i = index;
-    bool is_empty = true;
-    for(i; i< strlen(line); i ++){
+        /*
+        reset "temp"
+        */
+        int k;
+        for(k =0; k<= temp_index ; k ++){
+            temp[k] = '\0';
+        }
+        return true;
+    }
+    
+   
+    
+bool is_empty(const char *line){
+    int i; 
+    for(i = 0; i < strlen(line); i++){
         if(!isspace(line[i])){
-            is_empty = false;
+            return false;
+        }
+    }
+    return true;
+}
+    
+bool is_comment(const char *line){
+    int i; 
+    for(i = 0; i < strlen(line); i++){
+        if(isspace(line[i])){
+            continue;
+        }
+        if(line[i] == 59)
+            return true;
+        else    
+            return false;
+    }
+}
+
+
+bool is_string(const char *line, int *error_counter)
+{
+    char *word = ".string";
+    char *result = strstr(line, word);
+    if( result == NULL){
+        return false;
+    }
+
+   /*
+   start_index = starting index of ".string"
+   end_index = end index of ".string"
+   */
+    int start_index = result - line;
+    int end_index = start_index + 7;
+    /*
+    checking that there's a space or tab afer ".string"
+    */
+    if(line[end_index] != 32 && line[end_index] != 9){
+        printf("Invalid syntax in line: %s\n",line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+    
+    /*
+    checking that there are only 2 quotation marks (")
+    */
+    int i; 
+    int qm_counter = 0;
+    for(i = end_index; i< strlen(line) ; i++){
+        if(line[i] == 34)
+            qm_counter ++;
+    }
+    
+    if(qm_counter != 2){
+        printf("Invalid syntax in line: %s\n",line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+
+
+    /*
+    now we know there are exactly 2 quotation marks. 
+    Lets validate that they are first and last.
+    */
+
+   /*
+    if quotation mark isnt first return false
+   */
+   for(i = end_index; i < strlen(line) -2; i++){
+        if(isspace(line[i]))
+            continue;
+    
+        if(line[i] != 34){
+            printf("Invalid syntax in line: %s\n", line);
+            *error_counter = *error_counter + 1;
+            return false;   
+        }
+        else{
             break;
         }
     }
-    if(is_empty)
-        return 0;
-    
-    int coma_counter = 0;
-    i = index;
-    for(i; i < strlen(line); i ++){
-        char x = line[i];
-        if(line[i] == 44)
-            coma_counter ++;
-    }
-    return coma_counter + 1;
-    
-}
 
-int calc_needed_operands_num(char opcode[]){
-    if(strcmp("mov", opcode) ==0)
-        return 2;
-    if(strcmp("cmp", opcode) ==0)
-        return 2;
-    if(strcmp("add", opcode) ==0)
-        return 2;
-    if(strcmp("sub", opcode) ==0)
-        return 2;
-    if(strcmp("lea", opcode) ==0)
-        return 2;
-    if(strcmp("not", opcode) ==0)
-        return 1;
-    if(strcmp("clr", opcode) ==0)
-        return 1;
-    if(strcmp("inc", opcode) ==0)
-        return 1;
-    if(strcmp("dec", opcode) ==0)
-        return 1;
-    if(strcmp("jmp", opcode) ==0)
-        return 1;
-    if(strcmp("bne", opcode) ==0)
-        return 1;
-    if(strcmp("red", opcode) ==0)
-        return 1;
-    if(strcmp("prn", opcode) ==0)
-        return 1;
-    if(strcmp("jsr", opcode) ==0)
-        return 1;
-    if(strcmp("rts", opcode) ==0)
-        return 0;
-    if(strcmp("stop", opcode) ==0)
-        return 0;
-    return -1;
-}
-
-int get_colon_index(const char *line){
-    int i;
-    for(i=0; i < strlen(line); i ++){
-        if(line[i] == 58)
-        return i;
-    }
-    return -1;
-}
-
-bool check_valid_0_operand(const char *line, int index){
-    int i;
-    for(i = index; i < strlen(line); i++){
-        if(!isspace(line[i]))
-            return false;
-    }
-    return true;
-}
-
-bool check_valid_1_operand(const char *line, char operand[], int index){
-    int first_op_char = -1;
-    int last_op_char = -1;
-    int i; 
-    for(i = index; i < strlen(line); i++){
-        if(isspace(line[i]))
-            continue;
-        first_op_char = i;
-        break;
-    }
-    for(i = strlen(line) - 1; i> first_op_char; i--){
-        if(isspace(line[i]))
-            continue;
-        last_op_char = i;
-        break;
-    }
-    for(i = first_op_char; i < last_op_char; i++){
-        if(isspace(line[i]))
-            return false;
-    }
-    return true;
-}
-
-bool check_valid_2_operand(const char *line, char operand[], int index){
-    int coma_index = -1;
-    int first_op_char = -1;
-    int last_op_char = -1;
-    int i; 
     /*
-    validating no space is first operand
+    if quotation mark isnt last return false
     */
-    for(i = index; i < strlen(line); i++){
-        if(line[i] == 44){
-            coma_index = i;
+    for(i = strlen(line) -2; i > end_index ; i--){
+        if(isspace(line[i])){
+            continue;
+        }
+  
+        if(line[i] != 34){
+            printf("Invalid syntax in line: %s\n", line);
+            *error_counter = *error_counter + 1;
+            return false;   
+        }
+        else{
             break;
         }
     }
-    for(i = index; i < coma_index; i ++){
-        if(isspace(line[i]))
-            continue;
-        first_op_char = i;
-        break;
-    }
-    for(i = coma_index-1; i > first_op_char; i--){
-        if(isspace(line[i]))
-            continue;
-        last_op_char = i;
-        break;
-    }
-    for(i = first_op_char; i < last_op_char; i ++){
-        if(isspace(line[i]))
-            return false;
-    }
-    /*
-    validating no space is second operand
-    */
-    for(i = (coma_index+1); i < strlen(line); i ++){
-        if(isspace(line[i]))
-            continue;
-        first_op_char = i;
-        break;
-    }
-    for(i = (strlen(line)-2); i > first_op_char; i--){
-        if(isspace(line[i]))
-            continue;
-        last_op_char = i;
-    }
-    for(i = first_op_char; i < last_op_char; i ++){
-        if(isspace(line[i]))
-            return false;
-    }
-    
     return true;
 }
 
-void get_opcode_indexes(const char *line, int *start_index, int *end_index){
-
-    int i=0;
-    int colon_index = get_colon_index(line);
+bool is_entry(const char *line, int *error_counter){
     
+    char *word = ".entry";
+    char *result = strstr(line, word);
+    if( result == NULL){
+        return false;
+    }
+
+   /*
+   start_index = starting index of ".entry"
+   end_index = end index of ".entry"
+   */
+    int start_index = result - line;
+    int end_index = start_index + 6;
+    
+   
+    /*
+    checking that there's a space or tab afer ".entry"
+    */
+    if(line[end_index] != 32 && line[end_index] != 9){
+        printf("Invalid syntax in line: %s\n",line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+    return true;
+}
+
+
+
+ bool is_extern(const char *line, int *error_counter){
+    
+    char *word = ".extern";
+    char *result = strstr(line, word);
+    if( result == NULL){
+        return false;
+    }
+
+   /*
+   start_index = starting index of ".extern"
+   end_index = end index of ".extern"
+   */
+    int start_index = result - line;
+    int end_index = start_index + 7;
+    
+    /*
+    checking that there's a space or tab afer ".extern"
+    */
+    if(line[end_index] != 32 && line[end_index] != 9){
+        printf("Invalid syntax in line: %s\n",line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+    return true;
+ }
+
+void find_symbol_indexes(const char *line, int  *start_index, int *end_index){
+    int i;
+    for(i = 0; i < strlen(line); i++){
+        if(isspace(line[i]))
+            continue;
+        break;
+    }
+    *start_index = i;
+
+    for(i = *start_index +1 ; i < strlen(line); i++){
+        if(isspace(line[i]))
+            break;
+    }
+    *end_index = i;
+}
+
+void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *DC){
+    
+   /*
+    1. find symbol in line and save it as a variable
+    2. search that symbol in symbol table
+    3. if found - print error message
+    4. else - add symbol
+    */
+
+    int start_index = 0;
+    int end_index = 0;
+    find_symbol_indexes(line, &start_index, &end_index);
+
+    char symbol[LINE_SIZE + 1]; // define a character array with a fixed maximum length
+
+    // Copy substring to 'symbol' string
+    int i;
+    for (i = start_index; i <= end_index - 1; i++) {
+        symbol[i - start_index] = line[i];
+    }
+    symbol[i - start_index] = '\0';
+
+    int index = searchArray(symbols_table, &symbol, sizeof(char[10]), cmpStr);
+
+    if (index == -1)
+        addArray(symbols_table, &symbol, sizeof(char[10]));
+    else {
+        printf("Error: multiple definitions of symbol '%s'\n", symbol);
+        *error_counter = *error_counter + 1;
+    }
+}
+
+
+bool valid_instruct(const char *line, char instructions[][LINE_SIZE], int *error_counter){
+    
+    /*
+    1. check if there's a symbol in line (if there's a ":")
+    2. if there is: find its index and loop from one index after it until end of instruction
+    3. now we have start index and end index of instruction. we skip white chars before the instruction
+    4. save it as a string of its own(?) and check if it is in instructions array
+    */
+   
+   
+   /*
+   checking if there's a colon in line (if there is --> we have a symbol in line)
+   */
+   int colon_index = -1;
+   int i;
+   for (i = 0; i < strlen(line); i++){
+        if(line[i] == 58){
+            colon_index = i;
+            break;
+        }
+   }
+   /*
+   if we didnt find a colon (symbol): start searching at index 0
+   */
+   bool found_char = false;
+   int start_index = -1;
     if(colon_index == -1){
-        for(i = 0; i< strlen(line); i++){
-            if(isspace(line[i])){
+        for(i = 0; i < strlen(line); i++){
+            if(isspace(line[i]) && !found_char)
                 continue;
+            if(!found_char)
+                start_index = i;
+            found_char = true;
+
+            if(isspace(line[i]) && found_char){
+                break;
             }
-            *start_index = i;
-            break;
+            if(!(line[i] >=65 && line[i] <= 90) && !(line[i] >= 97 && line[i] <= 122)){
+                return false;
+            }
         }
-        if(isspace(line[*start_index + 3]))
-            *end_index = *start_index + 3;
-        else
-            *end_index = *start_index + 4;
     }
+    /*
+    found a colon --> start search at index ("colon_index" + 1)
+    */
     else{
-        for(i = (colon_index +1) ; i< strlen(line); i++){
-            if(isspace(line[i])){
+        for(i = (colon_index+1); i < strlen(line); i++){
+            if(isspace(line[i]) && !found_char)
                 continue;
+            if(!found_char)
+                start_index = i;
+            found_char = true;
+
+            if(isspace(line[i]) && found_char){
+                break;
             }
-            *start_index = i;
+            if(!(line[i] >=65 && line[i] <= 90) && !(line[i] >= 97 && line[i] <= 122)){
+                return false;
+            }
+        }
+    }
+    int end_index = i;
+    
+    /*
+    now we have start and end index of op code in line. start index is first char, end index is space/tab after op code
+    now we need to copy substring to new variable and search it in symbols table
+    */
+    
+    char *opcode = malloc(end_index - start_index + 2);
+
+    /*
+    copy substring to copy string
+    */ 
+    for (int i = start_index; i <= end_index -1; i++) {
+        opcode[i - start_index] = line[i];
+    }
+    opcode[end_index - start_index] = '\0'; 
+    /*
+    now we need just to check if opcode is in symbols table
+    */
+    int index = -1;
+    for (i = 0; i < 16; i++){
+         if (strcmp(instructions[i], opcode) == 0) {
+            index = i;
             break;
         }
-        if(isspace(line[*start_index + 3]))
-            *end_index = *start_index + 3;
-        else
-            *end_index = *start_index + 4;
     }
+    
+    if(index == -1){
+        return false;
+    }
+    free(opcode); 
+    return true;
+}
+
+int calc_binary_lines_num(const char *line){
+    return -1;
+}
+
+void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile){
+    
 }
