@@ -39,4 +39,59 @@ validating that opcode recieves corrent operands type.
 mov 3, 4 --> false
 mov r2,r4 --> true
 */
-bool validate_operands_type(const char *line, int index);
+bool validate_operands_type(const char *line,char opcode[], int index);
+
+/*
+validating syntax for opcodes jsr, bne, jmp
+option 1: jmp SYMBOL_NAME
+option 2: jmp SYMBOL_NAME(attribute1, attribute 2)
+*/
+bool validate_jsr_bne_jmp(const char *line, int index);
+
+/*
+looking for target's index in line.
+search starts at index 'start'
+*/
+int get_index_of(const char *line, char target, int start);
+
+/*
+returns index of first char that isnt white char.
+search start at index 'start'
+*/
+int get_first_char(const char *line, int start);
+
+/*
+returns true if a given line contains white chars in specific indexes
+*/
+bool is_contains_spaces(const char *line, int start, int end);
+
+/*
+returns true if in string 'line' in indexes start to end
+there's a register name
+*/
+bool is_register(const char *line, int start, int end);
+
+/*
+returns true if in string 'line' in indexes start to end
+there's a number
+*/
+bool is_number (const char *line, int start, int end);
+
+/*
+returns true if in string 'line' in indexes start to end
+there's a symbol name
+*/
+bool is_symbol (const char *line, int start, int end);
+
+/*
+checking if 'target' is in 'array'
+*/
+bool contains(char array[][5], int rows, char target[]);
+
+/*
+get last char that isnt white char. 
+starting from 'end' (including) and looping backwards
+*/
+int get_last_char(const char *line, int end);
+
+ 
