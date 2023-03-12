@@ -2,6 +2,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include "binary_conversions.h"
+
 
 char *pos_to_binary(unsigned int num, int bit_count) {
     // Allocate memory for the binary string
@@ -156,25 +158,33 @@ char *operands_params(char *orig, char *dest, const char** registers){
     return bit_str;
 }
 
-void string_to_binary(char* str){
+void string_to_binary(char* str, Binary_table *binary_table){
     // Find the first occurrence of a quote
     char* start = strchr(str, '\"');
 
     // Loop over each character between the opening and closing quotes
     for (char* p = start + 1; *p!='"'; p++) {
-        printf("%s\n", decimalToBinary((int)*p,14));//remember to free
+        char *temp;
+        temp = decimalToBinary((int)*p,14);
+        addBinaryLine(binary_table, temp);
+        free(temp);
     }
-    printf("00000000000000\n"); //end of string ('\0')
+    addBinaryLine(binary_table, "00000000000000");
 }
 
-void data_to_binary(char* data){
+void data_to_binary(char* data, Binary_table *binary_table){
     char* word;
-    while((word=get_next_word(data)) != NULL)
-        printf("%s\n",decimalToBinary(atoi(word),14));//remember to free
+    while((word=get_next_word(data)) != NULL){
+        char *temp;
+        temp = decimalToBinary(atoi(word),14);
+        addBinaryLine(binary_table, temp);
+        free(temp);
+    }
 }
 
 char* registers_addressing(char* orig_reg, char* dest_reg) {
     char *final_line = malloc(sizeof(char) * 14);
+    final_line[0] = '\0';
     char* reg_part1;
     char* reg_part2;
     if(orig_reg == NULL) {
@@ -205,79 +215,76 @@ char* registers_addressing(char* orig_reg, char* dest_reg) {
     }
 }
 
-void other_words(char* src_operand, char* dest_operand,const char** registers){
+void other_words(char* src_operand, char* dest_operand, const char** registers, Binary_table *binary_table){
     if(src_operand == NULL){
+        char *temp;
         if(find_string(registers,dest_operand)!=-1){//if dest a register
-            printf("%s\n",registers_addressing(NULL, dest_operand));
+            temp = registers_addressing(NULL, dest_operand);
+            addBinaryLine(binary_table, temp);
+            free(temp);
         }
         else if(dest_operand[0]=='#'){//if dest a number
-            printf("%s00\n",decimalToBinary(atoi(dest_operand+1),12));
+            temp = decimalToBinary(atoi(dest_operand+1),12);
+            strcat(temp, "00");
+            addBinaryLine(binary_table, temp);
+            free(temp);
         }
         else{//if dest a symbol
-            printf("?\n");
+            addBinaryLine(binary_table, "?");
         }
         return;
     }
     else if((find_string(registers,src_operand) != -1) && (find_string(registers,dest_operand) != -1)){//if both registers
-        printf("%s\n",registers_addressing(src_operand, dest_operand));
+        char *temp1;
+        temp1 = registers_addressing(src_operand, dest_operand);
+        addBinaryLine(binary_table, temp1);
+        free(temp1);
         return;
     }
     else if(src_operand != NULL){
+        char *temp2;
         if(find_string(registers,src_operand)!=-1){//if source a register
-            printf("%s\n",registers_addressing(src_operand, NULL));
+            temp2 = registers_addressing(src_operand, NULL);
+            addBinaryLine(binary_table,temp2);
+            free(temp2);
         }
         else if(src_operand[0]=='#'){//if source a number
-            printf("%s00\n",decimalToBinary(atoi(src_operand+1),12));
+            temp2 = decimalToBinary(atoi(src_operand+1),12);
+            strcat(temp2, "00");
+            addBinaryLine(binary_table,temp2);
+            free(temp2);
         }
         else{//if source a symbol
-            printf("?\n");
+            addBinaryLine(binary_table,"?");
         }
     }
+    char *temp3;
     if(find_string(registers,dest_operand)!=-1){//if dest a register
-        printf("%s\n",registers_addressing(NULL, dest_operand));
+        temp3 = registers_addressing(NULL, dest_operand);
+        addBinaryLine(binary_table,temp3);
+        free(temp3);
     }
     else if(dest_operand[0]=='#'){//if dest a number
-        printf("%s00\n",decimalToBinary(atoi(dest_operand+1),12));
+        temp3 = decimalToBinary(atoi(dest_operand+1),12);
+        strcat(temp3, "00");
+        addBinaryLine(binary_table, temp3);
+        free(temp3);
     }
     else{//if dest a symbol
-        printf("?\n");
+        addBinaryLine(binary_table, "?");
     }
 }
 
-
-int main() {
-    //from outside
-    const char* instructions[] = {"mov", "cmp", "add", "sub","not","clr","lea",
-    "inc", "dec", "jmp", "bne", "red","prn","jsr","rts","stop", NULL};
-    const char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7", NULL};
-
-    //local stuff:
+void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, Binary_table *binary_table){
     const char* first_type[] = {"mov", "cmp", "add", "sub","lea", NULL}; //2 operands
     const char* second_type[] = {"not","clr","inc", "dec", "jmp", "bne", "red","prn","jsr", NULL}; //1 operand
     const char* third_type[] = {"rts","stop", NULL};// 0 operands
     const char* jump_addressing[] = {"jmp","bne","jsr", NULL};
     char *first_word = malloc(sizeof(char) * 14);
-    
-    char opecode[80];
-    char src_operand[80];
-    char dest_operand[80];
-    char *ope_bin;
-    char *address_type;
-    char *params;
-    
-    //lines for testing:
-    char line1[] = "MAIN: mov r3,LENGTH";
-    char line2[] = "sub r1, r4";
-    char line3[] = "LOOP: jmp L1(#-1,r6)";
-    char line4[] = "END: stop";
-    char line5[] = "STR: .string \"abcdef\"";
-    char line6[] = "LENGTH: .data 6,-9,15";
-    char line7[] = "LOOP: bne LOOP(r4,r5)";
-    char line8[] = "bne END";
-    char line9[] = "bne LOOP(K,STR)";
-    char line[80];
-    strcpy(line, line9);
-    
+    char opecode[80], src_operand[80], dest_operand[80], line[80];
+    char *ope_bin, *address_type, *params;
+    strcpy(line, cur_line);
+
     //checks if symbol to skip it
     strcpy(opecode,get_next_word(line));
     if(is_symbol(opecode)){
@@ -285,22 +292,20 @@ int main() {
     }
 
     if(find_string(third_type, opecode) != -1){
-        //printf("third type\n");
         strcat(first_word, "0000");//bits 13-10
         ope_bin = opecode_to_binary(instructions,opecode);
         strcat(first_word, ope_bin);//bits 9-6
         free(ope_bin);
         strcat(first_word, "0000");//bits 5-2
         strcat(first_word, "00");//bits 1-0
-        printf("%s\n", first_word);
+        addBinaryLine(binary_table,first_word);
+        free(first_word);
     }
     else if(find_string(second_type, opecode) != -1){
-        //printf("second type\n");
         char *check_word;
         char first_operand[80];
         strcpy(first_operand,get_next_word(line));
         if((check_word = get_next_word(line)) != NULL){
-            //printf("jumping\n");
             strcpy(src_operand,check_word);
             strcpy(dest_operand,get_next_word(line));
             
@@ -313,9 +318,10 @@ int main() {
             free(ope_bin);
             strcat(first_word,"0010");//bits 5-2
             strcat(first_word, "00");//bits 1-0
-            printf("%s\n", first_word);
-            printf("?\n");//symbol 
-            other_words(src_operand, dest_operand, registers);
+            addBinaryLine(binary_table, first_word);
+            free(first_word);
+            addBinaryLine(binary_table, "?");
+            other_words(src_operand, dest_operand, registers, binary_table);
         }
         else{
             strcpy(dest_operand,first_operand);
@@ -327,12 +333,12 @@ int main() {
             strcat(first_word,address_type);//bits 5-2
             free(address_type);
             strcat(first_word, "00");//bits 1-0
-            printf("%s\n", first_word);
-            other_words(NULL, dest_operand, registers);
+            addBinaryLine(binary_table, first_word);
+            free(first_word);
+            other_words(NULL, dest_operand, registers, binary_table);
         }
     }
     else if(find_string(first_type, opecode) != -1){
-        //printf("first type\n");
         strcpy(src_operand,get_next_word(line));
         strcpy(dest_operand,get_next_word(line));
         strcat(first_word, "0000");//bits 13-10
@@ -343,16 +349,72 @@ int main() {
         strcat(first_word,address_type);//bits 5-2
         free(address_type);
         strcat(first_word, "00");//bits 1-0
-        printf("%s\n", first_word);
-        other_words(src_operand, dest_operand, registers);
+        addBinaryLine(binary_table,first_word);
+        other_words(src_operand, dest_operand, registers, binary_table);
     }
     else if(strcmp(opecode,".string") == 0){
-        string_to_binary(line);
+        string_to_binary(line, binary_table);
     }
     else if(strcmp(opecode,".data") == 0){
-        data_to_binary(line);
+        data_to_binary(line, binary_table);
     }
+}
+
+// Function to initialize a new binary_table
+void initBinaryTable(Binary_table *tablePtr) {
+    tablePtr->table = (Binary_line *) malloc(10 * sizeof(Binary_line)); // Allocate memory for 10 binary_line elements
+    tablePtr->size = 0; // Initialize the size of the array to 0
+}
+
+// Function to add a new binary_line element to the dynamic array
+void addBinaryLine(Binary_table *tablePtr, char *bin_str) {
+    // Double the size of the array if necessary
+    if (tablePtr->size % 10 == 0) {
+        tablePtr->table = (Binary_line *) realloc(tablePtr->table, (tablePtr->size + 10) * sizeof(Binary_line));
+    }
+
+    // Initialize the new binary_line element and add it to the array
+    Binary_line newLine = {tablePtr->size+100, ""};
+    strncpy(newLine.bin_str, bin_str, 14); // Copy the first 14 characters of the string
+    tablePtr->table[tablePtr->size] = newLine;
+
+    // Update the size of the array
+    (tablePtr->size)++;
+}
+
+int main() {
+    //from outside
+    const char* instructions[] = {"mov", "cmp", "add", "sub","not","clr","lea",
+    "inc", "dec", "jmp", "bne", "red","prn","jsr","rts","stop", NULL};
+    const char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7", NULL};
+
+    //lines for testing:
+    char line1[] = "MAIN: mov r3,LENGTH";
+    char line2[] = "sub r1, r4";
+    char line3[] = "LOOP: jmp L1(#-1,r6)";//issue with last one
+    char line4[] = "END: stop";
+    char line5[] = "STR: .string \"abcdef\"";
+    char line6[] = "LENGTH: .data 6,-9,15";
+    char line7[] = "LOOP: bne LOOP(r4,r5)";//issue 
+    char line8[] = "bne END";
+    char line9[] = "bne LOOP(K,STR)";
     
+
+    Binary_table binaryTable; // Declare a new binary_table
+    initBinaryTable(&binaryTable); // Initialize the binary_table
+
+    create_binary_from_line(line3, instructions, registers, &binaryTable);
+    
+    // Print the elements of the array
+    for (int i = 0; i < binaryTable.size; i++) {
+        printf("line_num: %d, bin_str: %s\n", binaryTable.table[i].line_num, binaryTable.table[i].bin_str);
+    }
+
+    // Print the size of the array
+    printf("Size of the array: %d\n", binaryTable.size);
+
+    // Free the memory allocated for the array
+    free(binaryTable.table);
     
     
     return 0;
