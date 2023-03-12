@@ -3,11 +3,6 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-//global arrays:
-    const char* instructions[] = {"mov", "cmp", "add", "sub","not","clr","lea",
-    "inc", "dec", "jmp", "bne", "red","prn","jsr","rts","stop", NULL};
-    const char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7", NULL};
-
 char *pos_to_binary(unsigned int num, int bit_count) {
     // Allocate memory for the binary string
     char *binary = (char*)malloc(bit_count + 1);
@@ -75,37 +70,6 @@ char* decimalToBinary(int decimalNum, int size) {
     }
 }
 
-char* registers_addressing(char* orig_reg, char* dest_reg) {
-    char *final_line = malloc(sizeof(char) * 14);
-    char* reg_part1;
-    char* reg_part2;
-    if(orig_reg == NULL) {
-        /*only destination register exists*/
-        reg_part1 = decimalToBinary(atoi(&dest_reg[1]),6);
-        strcat(final_line,reg_part1); /*adds the dest reg binary value*/
-        strcat(final_line,"000000"); /* no orig reg */
-        strcat(final_line,"00"); /*A,R,E value*/
-        return final_line;
-    }
-    else if(dest_reg == NULL) {
-        /*only origin register exists*/
-        reg_part2 = decimalToBinary(atoi(&orig_reg[1]),6);
-        strcat(final_line,"000000"); /* no dest reg */
-        strcat(final_line,reg_part2); /*adds the orig reg binary value*/
-        strcat(final_line,"00"); /*A,R,E value*/
-        return final_line;
-    }
-    else {
-        /*both registers exists*/
-        reg_part1 = decimalToBinary(atoi(&dest_reg[1]),6);
-        reg_part2 = decimalToBinary(atoi(&orig_reg[1]),6);
-        strcat(final_line,reg_part1); /*adds the dest reg binary value*/
-        strcat(final_line,reg_part2); /*adds the orig reg binary value*/
-        strcat(final_line,"00"); /*A,R,E value*/
-        return final_line;
-    }
-}
-
 int find_string(const char **array, const char *str) {
     int i;
     for (i = 0; array[i] != NULL; i++) {
@@ -162,7 +126,7 @@ int is_symbol(char* str) {
 }
 
 //creating the 4 digit bit type address of the origin,destination operands
-char *operands_params(char *orig, char *dest){
+char *operands_params(char *orig, char *dest, const char** registers){
     char *bit_str = malloc(sizeof(char) * 4);
     if (orig == NULL){
         strcpy(bit_str,"00");
@@ -200,6 +164,7 @@ void string_to_binary(char* str){
     for (char* p = start + 1; *p!='"'; p++) {
         printf("%s\n", decimalToBinary((int)*p,14));//remember to free
     }
+    printf("00000000000000\n"); //end of string ('\0')
 }
 
 void data_to_binary(char* data){
@@ -208,20 +173,94 @@ void data_to_binary(char* data){
         printf("%s\n",decimalToBinary(atoi(word),14));//remember to free
 }
 
+char* registers_addressing(char* orig_reg, char* dest_reg) {
+    char *final_line = malloc(sizeof(char) * 14);
+    char* reg_part1;
+    char* reg_part2;
+    if(orig_reg == NULL) {
+        /*only destination register exists*/
+        reg_part1 = decimalToBinary(atoi(&dest_reg[1]),6);
+        
+        strcat(final_line,"000000"); /* no orig reg */
+        strcat(final_line,reg_part1); /*adds the dest reg binary value*/
+        strcat(final_line,"00"); /*A,R,E value*/
+        return final_line;
+    }
+    else if(dest_reg == NULL) {
+        /*only origin register exists*/
+        reg_part2 = decimalToBinary(atoi(&orig_reg[1]),6);
+        strcat(final_line,reg_part2); /*adds the orig reg binary value*/
+        strcat(final_line,"000000"); /* no dest reg */
+        strcat(final_line,"00"); /*A,R,E value*/
+        return final_line;
+    }
+    else {
+        /*both registers exists*/
+        reg_part1 = decimalToBinary(atoi(&orig_reg[1]),6);
+        reg_part2 = decimalToBinary(atoi(&dest_reg[1]),6);
+        strcat(final_line,reg_part1); /*adds the dest reg binary value*/
+        strcat(final_line,reg_part2); /*adds the orig reg binary value*/
+        strcat(final_line,"00"); /*A,R,E value*/
+        return final_line;
+    }
+}
+
+void other_words(char* src_operand, char* dest_operand,const char** registers){
+    if(src_operand == NULL){
+        if(find_string(registers,dest_operand)!=-1){//if dest a register
+            printf("%s\n",registers_addressing(NULL, dest_operand));
+        }
+        else if(dest_operand[0]=='#'){//if dest a number
+            printf("%s00\n",decimalToBinary(atoi(dest_operand+1),12));
+        }
+        else{//if dest a symbol
+            printf("?\n");
+        }
+        return;
+    }
+    else if((find_string(registers,src_operand) != -1) && (find_string(registers,dest_operand) != -1)){//if both registers
+        printf("%s\n",registers_addressing(src_operand, dest_operand));
+        return;
+    }
+    else if(src_operand != NULL){
+        if(find_string(registers,src_operand)!=-1){//if source a register
+            printf("%s\n",registers_addressing(src_operand, NULL));
+        }
+        else if(src_operand[0]=='#'){//if source a number
+            printf("%s00\n",decimalToBinary(atoi(src_operand+1),12));
+        }
+        else{//if source a symbol
+            printf("?\n");
+        }
+    }
+    if(find_string(registers,dest_operand)!=-1){//if dest a register
+        printf("%s\n",registers_addressing(NULL, dest_operand));
+    }
+    else if(dest_operand[0]=='#'){//if dest a number
+        printf("%s00\n",decimalToBinary(atoi(dest_operand+1),12));
+    }
+    else{//if dest a symbol
+        printf("?\n");
+    }
+}
+
 
 int main() {
-    
+    //from outside
+    const char* instructions[] = {"mov", "cmp", "add", "sub","not","clr","lea",
+    "inc", "dec", "jmp", "bne", "red","prn","jsr","rts","stop", NULL};
+    const char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7", NULL};
+
     //local stuff:
     const char* first_type[] = {"mov", "cmp", "add", "sub","lea", NULL}; //2 operands
     const char* second_type[] = {"not","clr","inc", "dec", "jmp", "bne", "red","prn","jsr", NULL}; //1 operand
     const char* third_type[] = {"rts","stop", NULL};// 0 operands
     const char* jump_addressing[] = {"jmp","bne","jsr", NULL};
-    char *final_line = malloc(sizeof(char) * 14);
+    char *first_word = malloc(sizeof(char) * 14);
     
-    char opecode[30];
-    char symbol[30];
-    char src_operand[30];
-    char dest_operand[30];
+    char opecode[80];
+    char src_operand[80];
+    char dest_operand[80];
     char *ope_bin;
     char *address_type;
     char *params;
@@ -232,9 +271,12 @@ int main() {
     char line3[] = "LOOP: jmp L1(#-1,r6)";
     char line4[] = "END: stop";
     char line5[] = "STR: .string \"abcdef\"";
-    char line6[] = "LENGTH: .data 6,-9,15,22,0";
+    char line6[] = "LENGTH: .data 6,-9,15";
+    char line7[] = "LOOP: bne LOOP(r4,r5)";
+    char line8[] = "bne END";
+    char line9[] = "bne LOOP(K,STR)";
     char line[80];
-    strcpy(line, line6);
+    strcpy(line, line9);
     
     //checks if symbol to skip it
     strcpy(opecode,get_next_word(line));
@@ -244,55 +286,65 @@ int main() {
 
     if(find_string(third_type, opecode) != -1){
         //printf("third type\n");
-        strcat(final_line, "0000");//bits 13-10
+        strcat(first_word, "0000");//bits 13-10
         ope_bin = opecode_to_binary(instructions,opecode);
-        strcat(final_line, ope_bin);//bits 9-6
+        strcat(first_word, ope_bin);//bits 9-6
         free(ope_bin);
-        strcat(final_line, "0000");//bits 5-2
-        strcat(final_line, "00");//bits 1-0
+        strcat(first_word, "0000");//bits 5-2
+        strcat(first_word, "00");//bits 1-0
+        printf("%s\n", first_word);
     }
     else if(find_string(second_type, opecode) != -1){
         //printf("second type\n");
-        if(find_string(jump_addressing, opecode) != -1){
+        char *check_word;
+        char first_operand[80];
+        strcpy(first_operand,get_next_word(line));
+        if((check_word = get_next_word(line)) != NULL){
             //printf("jumping\n");
-            strcpy(symbol,get_next_word(line));
-            strcpy(src_operand,get_next_word(line));
+            strcpy(src_operand,check_word);
             strcpy(dest_operand,get_next_word(line));
             
-            params = operands_params(src_operand,dest_operand);
-            strcat(final_line,params);//bits 13-10
+            params = operands_params(src_operand,dest_operand, registers);
+            strcat(first_word,params);//bits 13-10
             free(params);
             
             ope_bin = opecode_to_binary(instructions,opecode);
-            strcat(final_line, ope_bin);//bits 9-6
+            strcat(first_word, ope_bin);//bits 9-6
             free(ope_bin);
-            strcat(final_line,"0010");//bits 5-2
-            strcat(final_line, "00");//bits 1-0
+            strcat(first_word,"0010");//bits 5-2
+            strcat(first_word, "00");//bits 1-0
+            printf("%s\n", first_word);
+            printf("?\n");//symbol 
+            other_words(src_operand, dest_operand, registers);
         }
         else{
-            strcpy(dest_operand,get_next_word(line));
-            strcat(final_line, "0000");//bits 13-10
+            strcpy(dest_operand,first_operand);
+            strcat(first_word, "0000");//bits 13-10
             ope_bin = opecode_to_binary(instructions,opecode);
-            strcat(final_line, ope_bin);//bits 9-6
+            strcat(first_word, ope_bin);//bits 9-6
             free(ope_bin);
-            address_type = operands_params(NULL,dest_operand);
-            strcat(final_line,address_type);//bits 5-2
+            address_type = operands_params(NULL,dest_operand, registers);
+            strcat(first_word,address_type);//bits 5-2
             free(address_type);
-            strcat(final_line, "00");//bits 1-0
+            strcat(first_word, "00");//bits 1-0
+            printf("%s\n", first_word);
+            other_words(NULL, dest_operand, registers);
         }
     }
     else if(find_string(first_type, opecode) != -1){
         //printf("first type\n");
         strcpy(src_operand,get_next_word(line));
         strcpy(dest_operand,get_next_word(line));
-        strcat(final_line, "0000");//bits 13-10
+        strcat(first_word, "0000");//bits 13-10
         ope_bin = opecode_to_binary(instructions,opecode);
-        strcat(final_line, ope_bin);//bits 9-6
+        strcat(first_word, ope_bin);//bits 9-6
         free(ope_bin);
-        address_type = operands_params(src_operand,dest_operand);
-        strcat(final_line,address_type);//bits 5-2
+        address_type = operands_params(src_operand,dest_operand, registers);
+        strcat(first_word,address_type);//bits 5-2
         free(address_type);
-        strcat(final_line, "00");//bits 1-0
+        strcat(first_word, "00");//bits 1-0
+        printf("%s\n", first_word);
+        other_words(src_operand, dest_operand, registers);
     }
     else if(strcmp(opecode,".string") == 0){
         string_to_binary(line);
@@ -302,7 +354,7 @@ int main() {
     }
     
     
-    printf("line: %s\n", final_line);
+    
     return 0;
 }
 
