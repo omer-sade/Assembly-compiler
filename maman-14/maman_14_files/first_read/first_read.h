@@ -92,3 +92,10 @@ returns true if this line is a comment
 (comment line starts with ";")
 */
 bool is_comment(const char *line);
+
+/*
+help function for 'has symbol'. 
+validates that symbol's name isnt an opcode / register name
+*/
+bool is_valid_symbol_name(const char *line, int start, int end);
+

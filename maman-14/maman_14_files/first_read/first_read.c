@@ -179,7 +179,11 @@ bool has_symbol(const char *line, int *error_counter){
         }
    }
   
-
+    if(colon_index -  first_char_index > 30){
+        printf("Invalid symbol declaration in line (too long): %s", line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
     /*
     if error found:
     ex: line is: "gfd gf:"
@@ -190,8 +194,78 @@ bool has_symbol(const char *line, int *error_counter){
         return false;
     }
 
+    bool isValidSymbolName = is_valid_symbol_name(line, first_char_index, colon_index);
+    if(!isValidSymbolName){
+        printf("Invalid symbol declaration in line: %s", line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+        
+
     return true;
     }
+
+bool is_valid_symbol_name(const char *line, int start, int end){
+    char symbol[LINE_SIZE + 1];
+    /*
+    Copy substring to 'symbol' string
+    */ 
+    int i;
+    for (i = start; i <= end - 1; i++) {
+        symbol[i - start] = line[i];
+    }
+    symbol[i - start] = '\0';
+
+    if(strcmp(symbol, "mov") == 0)
+        return false;
+    if(strcmp(symbol, "cmp") == 0)
+        return false;
+    if(strcmp(symbol, "add") == 0)
+        return false;
+    if(strcmp(symbol, "sub") == 0)
+        return false;
+    if(strcmp(symbol, "lea") == 0)
+        return false;
+    if(strcmp(symbol, "not") == 0)
+        return false;
+    if(strcmp(symbol, "clr") == 0)
+        return false;
+    if(strcmp(symbol, "inc") == 0)
+        return false;
+    if(strcmp(symbol, "dec") == 0)
+        return false;
+    if(strcmp(symbol, "jmp") == 0)
+        return false;
+    if(strcmp(symbol, "bne") == 0)
+        return false;
+    if(strcmp(symbol, "red") == 0)
+        return false;
+    if(strcmp(symbol, "prn") == 0)
+        return false;
+    if(strcmp(symbol, "jsr") == 0)
+        return false;
+    if(strcmp(symbol, "rts") == 0)
+        return false;
+    if(strcmp(symbol, "stop") == 0)
+        return false;
+    if(strcmp(symbol, "r0") == 0)
+        return false;
+    if(strcmp(symbol, "r1") == 0)
+        return false;
+    if(strcmp(symbol, "r2") == 0)
+        return false;
+    if(strcmp(symbol, "r3") == 0)
+        return false;
+    if(strcmp(symbol, "r4") == 0)
+        return false;
+    if(strcmp(symbol, "r5") == 0)
+        return false;
+    if(strcmp(symbol, "r6") == 0)
+        return false;
+    if(strcmp(symbol, "r7") == 0)
+        return false;
+    return true;
+}
 
 /*
 help function for "is_data". checking if a string contains numbers
