@@ -7,9 +7,11 @@ bool is_valid_line_opcode(const char *line){
     int start_index =0; 
     int end_index = 0; 
     get_opcode_indexes(line, &start_index, &end_index);
-    char opcode[LINE_SIZE + 1]; // define a character array with a fixed maximum length
+    char opcode[LINE_SIZE + 1]; 
 
-    // Copy substring to 'opcode' string
+    /*
+     Copy substring to 'opcode' string
+    */
     int i;
     for (i = start_index; i <= end_index - 1; i++) {
         opcode[i - start_index] = line[i];
@@ -23,7 +25,6 @@ bool is_valid_line_opcode(const char *line){
         if(needed_operands_num != acuall_operands_num)
             return false;
     }
-    
     
     /*
     validating that operands doesnt have spaces.
