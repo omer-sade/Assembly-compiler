@@ -39,11 +39,13 @@ char* registers_addressing(char* orig_reg, char* dest_reg);
 
 
 
-char *get_next_word(char *string);
+char *get_next_word(char *string, int *position);
 
-int is_symbol(char* str);
+int isSymbol(char* str);
 
 char *operands_params(char *orig, char *dest, const char** registers);
 
 
 void other_words(char* src_operand, char* dest_operand,const char** registers, Binary_table *binary_table);
+
+void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, Binary_table *binary_table);

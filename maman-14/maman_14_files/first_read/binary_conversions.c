@@ -89,10 +89,9 @@ char* opecode_to_binary(const char **arr, const char *str){
     return decimalToBinary(num,4);
 }
 
-char *get_next_word(char *string) {
+char *get_next_word(char *string, int *position) {
     static char word[80]; // static variable to store the word
-    static int position = 0; // static variable to keep track of the position
-    int i = position, j = 0;
+    int i = *position, j = 0;
     
     // skip any spaces or commas
     while (isspace(string[i]) || string[i] == ',' || \
@@ -112,14 +111,14 @@ char *get_next_word(char *string) {
     word[j] = '\0';
     
     // update the position variable to the next word
-    position = i;
+    *position = i;
     
     // return the word buffer
     return word[0] != '\0' ? word : NULL;
 }
 
 
-int is_symbol(char* str) {
+int isSymbol(char* str) {
     int len = strlen(str);
     if (len > 0 && str[len-1] == ':') {
         return 1;
@@ -174,7 +173,8 @@ void string_to_binary(char* str, Binary_table *binary_table){
 
 void data_to_binary(char* data, Binary_table *binary_table){
     char* word;
-    while((word=get_next_word(data)) != NULL){
+    int position = 0;
+    while((word=get_next_word(data, &position)) != NULL){
         char *temp;
         temp = decimalToBinary(atoi(word),14);
         addBinaryLine(binary_table, temp);
@@ -283,12 +283,11 @@ void create_binary_from_line(const char *cur_line, const char** instructions, co
     char *first_word = malloc(sizeof(char) * 14);
     char opecode[80], src_operand[80], dest_operand[80], line[80];
     char *ope_bin, *address_type, *params;
+    int position = 0;
     strcpy(line, cur_line);
-
-    //checks if symbol to skip it
-    strcpy(opecode,get_next_word(line));
-    if(is_symbol(opecode)){
-        strcpy(opecode,get_next_word(line));
+    strcpy(opecode,get_next_word(line, &position));
+    if(isSymbol(opecode)){
+        strcpy(opecode,get_next_word(line, &position));
     }
 
     if(find_string(third_type, opecode) != -1){
@@ -304,10 +303,10 @@ void create_binary_from_line(const char *cur_line, const char** instructions, co
     else if(find_string(second_type, opecode) != -1){
         char *check_word;
         char first_operand[80];
-        strcpy(first_operand,get_next_word(line));
-        if((check_word = get_next_word(line)) != NULL){
+        strcpy(first_operand,get_next_word(line, &position));
+        if((check_word = get_next_word(line, &position)) != NULL){
             strcpy(src_operand,check_word);
-            strcpy(dest_operand,get_next_word(line));
+            strcpy(dest_operand,get_next_word(line, &position));
             
             params = operands_params(src_operand,dest_operand, registers);
             strcat(first_word,params);//bits 13-10
@@ -339,8 +338,8 @@ void create_binary_from_line(const char *cur_line, const char** instructions, co
         }
     }
     else if(find_string(first_type, opecode) != -1){
-        strcpy(src_operand,get_next_word(line));
-        strcpy(dest_operand,get_next_word(line));
+        strcpy(src_operand,get_next_word(line, &position));
+        strcpy(dest_operand,get_next_word(line, &position));
         strcat(first_word, "0000");//bits 13-10
         ope_bin = opecode_to_binary(instructions,opecode);
         strcat(first_word, ope_bin);//bits 9-6
@@ -382,7 +381,7 @@ void addBinaryLine(Binary_table *tablePtr, char *bin_str) {
     (tablePtr->size)++;
 }
 
-int main() {
+/*int main() {
     //from outside
     const char* instructions[] = {"mov", "cmp", "add", "sub","not","clr","lea",
     "inc", "dec", "jmp", "bne", "red","prn","jsr","rts","stop", NULL};
@@ -391,11 +390,11 @@ int main() {
     //lines for testing:
     char line1[] = "MAIN: mov r3,LENGTH";
     char line2[] = "sub r1, r4";
-    char line3[] = "LOOP: jmp L1(#-1,r6)";//issue with last one
+    char line3[] = "LOOP: jmp L1(#-1,r6)";
     char line4[] = "END: stop";
     char line5[] = "STR: .string \"abcdef\"";
     char line6[] = "LENGTH: .data 6,-9,15";
-    char line7[] = "LOOP: bne LOOP(r4,r5)";//issue 
+    char line7[] = "LOOP: bne LOOP(r4,r5)";
     char line8[] = "bne END";
     char line9[] = "bne LOOP(K,STR)";
     
@@ -418,5 +417,5 @@ int main() {
     
     
     return 0;
-}
+}*/
 

@@ -5,7 +5,7 @@
  bool is_valid_line_opcode(const char *line);
 
 
-void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE], FILE *p_outputFile){
+void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *binary_table){
     
     int DC = 0, IC = 0; 
     /*
@@ -69,16 +69,16 @@ void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE
        */
         if(current_error_num == error_counter){
             if(!is_empty(line) && !isData && !isString && !isEntry && !isExtern){
-                if(!valid_instruct(line, insturctions, &error_counter) ||!is_valid_line_opcode(line)){
+                if(!valid_instruct(line, instructions, &error_counter) ||!is_valid_line_opcode(line)){
                     printf("Invalid syntax in line: %s\n", line);
                     error_counter ++;
                 }
             }
         }
 
-        int num_binary_lines = calc_binary_lines_num(line);
-        create_binary_from_line(line, num_binary_lines, p_outputFile);
-        IC += num_binary_lines;
+        //int num_binary_lines = calc_binary_lines_num(line);
+        create_binary_from_line(line, instructions, registers, binary_table);
+        //IC += num_binary_lines;
     }
     
     /*
@@ -722,7 +722,7 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
 }
 
 
-bool valid_instruct(const char *line, char instructions[][LINE_SIZE], int *error_counter){
+bool valid_instruct(const char *line, const char **instructions, int *error_counter){
     
     /*
     1. check if there's a symbol in line (if there's a ":")
@@ -803,7 +803,7 @@ bool valid_instruct(const char *line, char instructions[][LINE_SIZE], int *error
     now we need just to check if opcode is in symbols table
     */
     int index = -1;
-    for (i = 0; i < 16; i++){
+    for (i = 0; instructions[i] != NULL; i++){
          if (strcmp(instructions[i], opcode) == 0) {
             index = i;
             break;
@@ -821,6 +821,6 @@ int calc_binary_lines_num(const char *line){
     return -1;
 }
 
-void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile){
+// void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile){
     
-}
+// }

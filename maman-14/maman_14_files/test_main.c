@@ -37,8 +37,6 @@ int main(){
     16 total. 
     
     */
-    char instructions[16][LINE_SIZE];
-    add_data(instructions);
     
     /*
     opening all macros
@@ -49,12 +47,24 @@ int main(){
     fclose(p_file_open_macros);
     p_file_open_macros = fopen("file_open_macros.txt","r");
 
+    const char* instructions[] = {"mov", "cmp", "add", "sub","not","clr","lea",
+    "inc", "dec", "jmp", "bne", "red","prn","jsr","rts","stop", NULL};
+    const char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7", NULL};
+
+    Binary_table binaryTable; // Declare a new binary_table
+    initBinaryTable(&binaryTable); // Initialize the binary_table
+
     /*
     reading file for the first time 
     */
-    reading_file_first_time(&symbols_table, instructions, p_file_open_macros);
+    reading_file_first_time(&symbols_table, instructions, p_file_open_macros, registers, &binaryTable);
 
-    
+    for (int i = 0; i < binaryTable.size; i++) {
+        printf("line_num: %d, bin_str: %s\n", binaryTable.table[i].line_num, binaryTable.table[i].bin_str);
+    }
+
+    // Print the size of the array
+    printf("Size of the array: %d\n", binaryTable.size);
 
 
     /*
@@ -65,27 +75,6 @@ int main(){
 
     fclose(p_file_open_macros); 
     free(symbols_table.data);
+    free(binaryTable.table);
     
-    
-    }
-
-    void add_data(char instructions[][LINE_SIZE]){
-       
-    strcpy(instructions[0], "mov");
-    strcpy(instructions[1], "cmp");
-    strcpy(instructions[2], "add");
-    strcpy(instructions[3], "sub");
-    strcpy(instructions[4], "lea");
-    strcpy(instructions[5], "not");
-    strcpy(instructions[6], "clr");
-    strcpy(instructions[7], "inc");
-    strcpy(instructions[8], "dec");
-    strcpy(instructions[9], "jmp");
-    strcpy(instructions[10], "bne");
-    strcpy(instructions[11], "red");
-    strcpy(instructions[12], "prn");
-    strcpy(instructions[13], "jsr");
-    strcpy(instructions[14], "rts");
-    strcpy(instructions[15], "stop");
-
-    }
+}
