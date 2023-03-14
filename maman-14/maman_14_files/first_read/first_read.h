@@ -99,3 +99,16 @@ validates that symbol's name isnt an opcode / register name
 */
 bool is_valid_symbol_name(const char *line, int start, int end);
 
+/*
+returns the index of char 'target' in 'line'.
+search starts at index 'start'
+*/
+int get_index_of(const char *line, char target, int start);
+
+/*
+help function for 'is_data'
+validates that the syntax is valid
+*/
+bool is_valid_syntax(const char *line, int start_index, int end_index, int *error_counter);
+
+bool is_valid_line_opcode(const char *line);
