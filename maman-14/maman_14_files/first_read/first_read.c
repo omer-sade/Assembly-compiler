@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include "first_read.h"
 
- bool is_valid_line_opcode(const char *line);
 
 
 void reading_file_first_time(Array *symbols_table, char insturctions[][LINE_SIZE], FILE *p_outputFile){
@@ -139,14 +138,8 @@ bool has_symbol(const char *line, int *error_counter){
     /*
     finding the colon index (":" is 58 in ascii)
     */
-    int colon_index = -1;
-    for( i = 0; i < strlen(line) ; i ++){
-        if(line[i] == 58){
-            colon_index = i;
-            break;
-        }
-    }
-    
+    int colon_index = get_index_of(line, 58, 0);
+
     if(colon_index == 0){
         printf("Invalid syntax in line: %s\n",line);
         *error_counter = *error_counter + 1;
@@ -178,7 +171,13 @@ bool has_symbol(const char *line, int *error_counter){
             }   
         }
    }
-  
+   int index = first_char_index;
+    if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122))){
+        printf("Invalid symbol declaration in line: %s", line);
+        *error_counter = *error_counter + 1;
+        return false;       
+    }
+
     if(colon_index -  first_char_index > 30){
         printf("Invalid symbol declaration in line (too long): %s", line);
         *error_counter = *error_counter + 1;
@@ -200,8 +199,6 @@ bool has_symbol(const char *line, int *error_counter){
         *error_counter = *error_counter + 1;
         return false;
     }
-        
-
     return true;
     }
 
@@ -345,18 +342,14 @@ bool is_data(const char *line, int *error_counter)
                     *error_counter = *error_counter + 1;
                     return false;
                 }
-
             }
     }
-    
 
     /*
     looping from end of ".data" to end of "line".
     if there's any thing that isnt a space, number, coma, hyphen, plus sign --> return false
     */
-    
-    for(i = end_index; i < strlen(line)-2; i++){
-        
+    for(i = end_index; i < strlen(line)-2; i++){  
         if (line[i] == 32 || line[i] == 9 || line[i] == 10 || line[i] == '\0'){ 
             continue;
         }
@@ -366,20 +359,12 @@ bool is_data(const char *line, int *error_counter)
             return false;   
         }
     }
-    /*
-    if we got here, there are only numbers, comas, hyphens, plus signs and white characters after ".data".
-    we need to verify that everything is ok according to page 36 in pdf. 
-    */
-
    /*
     if coma is first return false
    */
    for(i = end_index; i < strlen(line) -2; i++){
         if(isspace(line[i]))
             continue;
-        /*
-        if coma is first - invalid syntax
-        */
         if(line[i] == 44){
             printf("Invalid syntax in line: %s\n", line);
             *error_counter = *error_counter + 1;
@@ -394,28 +379,29 @@ bool is_data(const char *line, int *error_counter)
     if coma is last return false
     */
     for(i = strlen(line) -2; i > end_index ; i--){
-        if(isspace(line[i])){
+        if(isspace(line[i]))
             continue;
-        }
-            
-        /*
-        if coma is last - invalid syntax
-        */
         if(line[i] == 44 || line[i] == 45 || line[i] == 43){
             printf("Invalid syntax in line: %s\n", line);
             *error_counter = *error_counter + 1;
             return false;   
         }
-        else{
+        else
             break;
-        }
     }
 
+    bool isValidSyntax = is_valid_syntax(line, start_index, end_index, error_counter);
+    if(isValidSyntax)
+        return true;
+    return false;
+    }
+    
+bool is_valid_syntax(const char *line, int start_index, int end_index, int *error_counter){
     /* "temp" holds parts from "line", used to validate line syntax in following loop*/
     char temp[LINE_SIZE]; 
     temp[0] = '\0';
     int temp_index = 0;
-    
+    int i;
     /*
     looping through "line" and looking for errors
     */
@@ -508,10 +494,10 @@ bool is_data(const char *line, int *error_counter)
             temp[k] = '\0';
         }
         return true;
-    }
+}
     
-   
-    
+
+
 bool is_empty(const char *line){
     int i; 
     for(i = 0; i < strlen(line); i++){
