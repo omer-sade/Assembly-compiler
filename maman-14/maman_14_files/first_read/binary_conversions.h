@@ -33,7 +33,7 @@ char* opecode_to_binary(const char **arr, const char *str);
 
 void string_to_binary(char* str, Binary_table *binary_table);
 
-void data_to_binary(char* data, Binary_table *binary_table);
+void data_to_binary(char* data, Binary_table *binary_table, int *position);
 
 char* registers_addressing(char* orig_reg, char* dest_reg);
 

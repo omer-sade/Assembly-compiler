@@ -76,6 +76,7 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
         }
 
         //int num_binary_lines = calc_binary_lines_num(line);
+        printf("line: %s", line);
         create_binary_from_line(line, instructions, registers, binary_table);
         //IC += num_binary_lines;
     }

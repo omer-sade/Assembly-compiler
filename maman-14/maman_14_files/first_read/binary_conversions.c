@@ -171,10 +171,9 @@ void string_to_binary(char* str, Binary_table *binary_table){
     addBinaryLine(binary_table, "00000000000000");
 }
 
-void data_to_binary(char* data, Binary_table *binary_table){
+void data_to_binary(char* data, Binary_table *binary_table, int *position){
     char* word;
-    int position = 0;
-    while((word=get_next_word(data, &position)) != NULL){
+    while((word=get_next_word(data, position)) != NULL){
         char *temp;
         temp = decimalToBinary(atoi(word),14);
         addBinaryLine(binary_table, temp);
@@ -280,7 +279,7 @@ void create_binary_from_line(const char *cur_line, const char** instructions, co
     const char* second_type[] = {"not","clr","inc", "dec", "jmp", "bne", "red","prn","jsr", NULL}; //1 operand
     const char* third_type[] = {"rts","stop", NULL};// 0 operands
     const char* jump_addressing[] = {"jmp","bne","jsr", NULL};
-    char *first_word = malloc(sizeof(char) * 14);
+    char *first_word = (char*)calloc(14, sizeof(char));
     char opecode[80], src_operand[80], dest_operand[80], line[80];
     char *ope_bin, *address_type, *params;
     int position = 0;
@@ -355,7 +354,7 @@ void create_binary_from_line(const char *cur_line, const char** instructions, co
         string_to_binary(line, binary_table);
     }
     else if(strcmp(opecode,".data") == 0){
-        data_to_binary(line, binary_table);
+        data_to_binary(line, binary_table, &position);
     }
 }
 
