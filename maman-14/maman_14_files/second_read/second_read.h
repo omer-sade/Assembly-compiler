@@ -1,0 +1,1 @@
+#define SYMBOL_LEN 30

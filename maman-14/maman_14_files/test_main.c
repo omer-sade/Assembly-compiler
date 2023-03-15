@@ -67,6 +67,8 @@ int main(){
     printf("Size of the array: %d\n", binaryTable.size);
 
 
+    fclose(p_file_open_macros);
+    p_file_open_macros = fopen("file_open_macros.txt","r");
     /*
     reading file for the second time 
     */
