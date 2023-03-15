@@ -20,7 +20,6 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
     */
     char line[LINE_SIZE];
     while(fgets(line, sizeof(line), p_outputFile) != NULL){
-        
         if(is_empty(line) || is_comment(line))
             continue;
         if(is_coma_last(line)){
@@ -41,16 +40,15 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
         bool isData = is_data(line, &error_counter);
         bool isString = is_string(line, &error_counter);
 
+        bool isEntry = is_entry(line, &error_counter);
+        bool isExtern = is_extern(line, &error_counter);
         if(isData || isString){
             if(is_symbol_found){
                 addSymbol(symbols_table, &error_counter, line, &DC);
-                continue;
             }
            
         }
-        bool isEntry = is_entry(line, &error_counter);
-        bool isExtern = is_extern(line, &error_counter);
-        if(isEntry || isExtern){
+        else if(isEntry || isExtern){
             /*
             didnt fully understand this part. this is line 9 in algorythm.
             */
@@ -60,13 +58,13 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
         If we got here than line doest contain data declaration nor extern / entry declaration. 
         Meaning it is instructions (with possibly a symbol).
         */
-       if(is_symbol_found){
+        else if(is_symbol_found){
             addSymbol(symbols_table, &error_counter, line, &IC);
-       }
+        }
        /*
        if there's no data, no string, no entry, no extern in line --> it has opcode
        */
-        if(current_error_num == error_counter){
+        else if(current_error_num == error_counter){
             if(!is_empty(line) && !isData && !isString && !isEntry && !isExtern){
                 if(!valid_instruct(line, instructions, &error_counter) ||!is_valid_line_opcode(line)){
                     printf("Invalid syntax in line: %s\n", line);
@@ -76,8 +74,9 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
         }
 
         //int num_binary_lines = calc_binary_lines_num(line);
-        printf("line: %s", line);
-        create_binary_from_line(line, instructions, registers, binary_table);
+        if(current_error_num == error_counter){
+            create_binary_from_line(line, instructions, registers, binary_table);
+        }
         //IC += num_binary_lines;
     }
     
@@ -87,9 +86,8 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
     if(error_counter > 0){
         free(symbols_table->data);
         fclose(p_outputFile);
+        free(binary_table->table);
         exit(1);
-    
-    
     }
 
 
