@@ -1,14 +1,43 @@
 #include "second_read.h"
 
+/*
+function for bar
+*/
+void get_is_extern_and_line_num(Array *symbols_table ,char *symbol, int *line_num, int *is_extern){
+    int i =0; 
+    i = searchArray(symbols_table, symbol);
+    if(i != -1){
+        *line_num = symbols_table->symbol[i].line_num;
+        if(symbols_table->symbol[i].ext)
+            *is_extern = 1;
+    }
+    else{
+        /*
+        symbol not in table (you can delete if you want, added this part for clarity)
+        */
+    }
+
+    /*
+    EXAMPLE HOW TO USE
+
+    char *symbol = "boo";
+    int line_num = 0;
+    int is_extern = 0;
+    get_is_extern_and_line_num(symbols_table,symbol, &line_num, &is_extern);
+    */
+
+}
+
 void reading_file_second_time(Array *symbols_table, const char **instructions, FILE *p_outputFile){
-    int IC =0; 
+   
     char line[LINE_SIZE];
-    int size = symbols_table->size;
-    char entry_symbols_arr[size][SYMBOL_LEN];
-    int entry_arr_index = 0;
+   
+    
     int error_counter = 0;
-    int entry_counter = 0;
     int extern_couner = 0;
+    Array entry_table;
+    initArray(&entry_table);
+
     while(fgets(line, sizeof(line), p_outputFile) != NULL){
         
         if(is_empty(line) || is_comment(line))
@@ -19,7 +48,6 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
         char *is_string = strstr(line, ".string");
         char *is_entry = strstr(line, ".entry");
        
-        printf("line = %s\n", line);
        
         if(is_data || is_string)
             continue;
@@ -28,26 +56,8 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
             continue;
         }
         if(is_entry){
-            /*
-            stages 6, 7, 8 in page 46
-            */
-           int start, end;
-           start = get_first_char(line, 0);
-           start = get_first_char(line, start + 7);
-           end = get_last_char(line, strlen(line));
-           char symbol[SYMBOL_LEN];
-            /*
-            Copy substring to 'symbol' string
-            */ 
-            int i;
-            for (i = start; i <= end - 1; i++) {
-                symbol[i - start] = line[i];
-            }
-            symbol[i - start] = '\0';
-            strncpy(entry_symbols_arr[entry_arr_index], symbol, SYMBOL_LEN-1); 
-            entry_symbols_arr[entry_arr_index][SYMBOL_LEN-1] = '\0';
-            entry_arr_index++;
-            continue;
+            int temp = 0;
+            add_Extern_Entry_Symbol(&entry_table,&error_counter, line, &temp);        
         }
         else{
             /*
@@ -56,7 +66,28 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
         }
         
     }
+    
+    int i, j;
+    bool found = false;
+    for(i = 0; i < entry_table.size; i++){
+        found = false;
+        for(j = 0; j < symbols_table->size; j++){
+            char *symbol1 = entry_table.symbol[i].name;
+            char *symbol2 = symbols_table->symbol[j].name; 
+            if(strcmp(symbol1, symbol2) ==0){
+                found = true;
+            }
+        }
+        if(!found){
+            error_counter ++;
+            printf("Error: declared entry symbol '%s' without initialzing it.\n", entry_table.symbol[i].name);
+        }
+    }
 
+    
+    
+
+    
     if(error_counter > 0){
         printf("Errors found in file. Terminating program.\n");
         return;
@@ -70,7 +101,7 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
         create file with extern symbols
         */
     }
-    if(entry_counter >0){
+    if(entry_table.size >0){
         /*
         create file with extern symbols
         */

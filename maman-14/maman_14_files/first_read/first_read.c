@@ -55,18 +55,15 @@
                 addSymbol(symbols_table, &error_counter, line, &line_num);
             }
             else if(is_symbol_found){
-                int temp = -1;
+                int temp = 0;
                 addSymbol(symbols_table, &error_counter, line, &temp);
             }
            
         }
         else if(isEntry || isExtern){
             if(isExtern){
-                int temp = -1;
+                int temp = 0;
                 add_Extern_Entry_Symbol(symbols_table,&error_counter, line, &temp);
-            }
-            else{
-                add_Extern_Entry_Symbol(symbols_table,&error_counter, line, &line_num);
             }
            continue;
         }
@@ -807,7 +804,7 @@ void find_symbol_indexes(const char *line, int  *start_index, int *end_index){
         if(isspace(line[i]))
             break;
     }
-    *end_index = i;
+    *end_index = i-1;
 }
 
 void find_external_symbol_indexes(const char *line, int *start, int *end){
