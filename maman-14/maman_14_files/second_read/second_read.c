@@ -54,6 +54,7 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
             convert line to binary
             */
         }
+        
     }
 
     if(error_counter > 0){
