@@ -84,7 +84,7 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
     if errors found in file, terminate program
     */
     if(error_counter > 0){
-        free(symbols_table->data);
+        free(symbols_table->symbol);
         fclose(p_outputFile);
         free(binary_table->table);
         exit(1);
@@ -687,7 +687,7 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
     int end_index = 0;
     find_symbol_indexes(line, &start_index, &end_index);
 
-    char symbol[LINE_SIZE + 1]; // define a character array with a fixed maximum length
+    char symbol[LINE_SIZE+1]; // define a character array with a fixed maximum length
 
     // Copy substring to 'symbol' string
     int i;
@@ -696,10 +696,10 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
     }
     symbol[i - start_index] = '\0';
 
-    int index = searchArray(symbols_table, &symbol, sizeof(char[10]), cmpStr);
+    int index = searchArray(symbols_table, symbol);
 
     if (index == -1)
-        addArray(symbols_table, &symbol, sizeof(char[10]));
+        addArray(symbols_table, symbol);
     else {
         printf("Error: multiple definitions of symbol '%s'\n", symbol);
         *error_counter = *error_counter + 1;

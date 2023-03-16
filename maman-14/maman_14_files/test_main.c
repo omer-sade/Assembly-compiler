@@ -30,7 +30,7 @@ int main(){
     (see page 42 in instructions file)
     */
     Array symbols_table;
-    initArray(&symbols_table, sizeof(char[100]));
+    initArray(&symbols_table);
 
     /*
     contains all valid instructions: mov, sub, inc.. 
@@ -76,7 +76,7 @@ int main(){
 
 
     fclose(p_file_open_macros); 
-    free(symbols_table.data);
+    free(symbols_table.symbol);
     free(binaryTable.table);
     
 }

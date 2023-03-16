@@ -5,53 +5,80 @@
 
 #define INITIAL_CAPACITY 100
 
+// typedef struct {
+//     void *data;
+//     /*
+//      size - how many items are currently in the array
+//     */
+//     size_t size; 
+//     /*
+//     capacity - max items the array is able to hold. when size equals capacity - increase capacity
+//     */
+//     size_t capacity;
+// } Array;
+
+/*
+new part start
+*/
+// Define the struct for each element of the array
 typedef struct {
-    void *data;
-    /*
-     size - how many items are currently in the array
-    */
-    size_t size; 
-    /*
-    capacity - max items the array is able to hold. when size equals capacity - increase capacity
-    */
-    size_t capacity;
+    char name[30]; 
+    bool ent;
+    bool ext;
+} Symbol;
+
+// Define the struct for the array itself
+typedef struct {
+    Symbol *symbol;
+    int size;
 } Array;
 
+/*
+new part end
+*/
 
-void initArray(Array *arr, size_t data_size);
-void addArray(Array *arr, void *element, size_t data_size);
-int searchArray(Array *arr, void *element, size_t data_size, int (*cmp)(const void*, const void*));
-int cmpInt(const void *a, const void *b);
-int cmpStr(const void *a, const void *b) ;
 
-void initArray(Array *arr, size_t data_size) {
-    arr->data = malloc(INITIAL_CAPACITY * data_size);
-    if(arr->data == NULL){
+
+
+
+void initArray(Array *arr);
+void addArray(Array *arr, char *element);
+int searchArray(Array *arr, char *element);
+
+
+void initArray(Array *arr) {
+    arr->symbol = (Symbol *)malloc(INITIAL_CAPACITY * sizeof(Symbol));
+    if(arr->symbol == NULL){
         printf("Failed to allocate memory. Terminating program.\n");
         exit(EXIT_FAILURE);
     }
     arr->size = 0;
-    arr->capacity = INITIAL_CAPACITY;
 }
 
-void addArray(Array *arr, void *element, size_t data_size) {
-    if (arr->size == arr->capacity) {
-        arr->capacity *= 2;
-        arr->data = realloc(arr->data, arr->capacity * data_size);
+void addArray(Array *arr, char *element) {
+    if (arr->size % 10 == 0) {
+        arr->symbol = (Symbol *) realloc(arr->symbol, (arr->size + 10) * sizeof(Symbol));
     }
-    memcpy(arr->data + arr->size * data_size, element, data_size);
-    arr->size++;
+    Symbol s = {"", false, false};
+    strcpy(s.name, element);
+    arr->symbol[arr->size] = s;
+    (arr->size) ++;
 }
 
-int searchArray(Array *arr, void *element, size_t data_size, int (*cmp)(const void*, const void*)) {
+int cmp_symbol(Symbol sy1, Symbol sy2){
+    return strcmp(sy1.name, sy2.name);
+}
+
+int searchArray(Array *arr, char *element) {
     int i;
     for (i = 0; i < arr->size; i++) {
-        if (cmp(arr->data + i * data_size, element) == 0) {
+        if (strcmp(arr->symbol[i].name, element) == 0) {
             return i;
         }
     }
     return -1;
 }
+
 
 /*
 methods to compare to types of data. 
