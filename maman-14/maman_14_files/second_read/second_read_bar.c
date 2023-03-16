@@ -52,7 +52,7 @@ void get_length_and_converted_string(int num, char *input, FILE *fp) {
     convert_to_dots_slashes(input, converted);
     fprintf(fp, "%s\t%s\n", int_to_four_char_string(num), converted);
 }
-
+/*
 int main() {
     FILE *fp = fopen("test.txt", "w");
     if (fp == NULL) {
@@ -67,3 +67,4 @@ int main() {
     fclose(fp);
     return 0;
 }
+*/

@@ -6,7 +6,8 @@
 
 	void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *instructions_table, Binary_table *data_table){
     
-    int line_num = 100; 
+    int IC = 100; 
+    int DC = 0;
     /*
     every time we find an error - increment by 1. at the end if its value isnt 0 - stop the code. 
     */
@@ -52,7 +53,7 @@
         bool isExtern = is_extern(line, &error_counter);
         if(isData || isString){
             if(is_symbol_found && !isExtern){
-                addSymbol(symbols_table, &error_counter, line, &line_num);
+                addSymbol(symbols_table, &error_counter, line, &IC);
             }
             else if(is_symbol_found){
                 int temp = 0;
@@ -72,7 +73,7 @@
         Meaning it is instructions (with possibly a symbol).
         */
         else if(is_symbol_found){
-            addSymbol(symbols_table, &error_counter, line, &line_num);
+            addSymbol(symbols_table, &error_counter, line, &IC);
         }
        /*
        if there's no data, no string, no entry, no extern in line --> it has opcode
@@ -86,12 +87,14 @@
             }
         }
 
-        //int num_binary_lines = calc_binary_lines_num(line);
         if(current_error_num == error_counter){
-            create_binary_from_line(line, instructions, registers, instructions_table, data_table, &line_num);        }
-        //IC += num_binary_lines;
+            create_binary_from_line(line, instructions, registers, instructions_table, data_table, &IC, &DC);
+        }
     }
-    
+    /*updates data lines values to the end of the instructions lines*/
+    for (int i = 0; i < data_table->size; i++) {
+        data_table->table[i].line_num += IC;
+    }
     /*
     if errors found in file, terminate program
     */
