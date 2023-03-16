@@ -48,4 +48,4 @@ char *operands_params(char *orig, char *dest, const char** registers);
 
 void other_words(char* src_operand, char* dest_operand,const char** registers, Binary_table *binary_table);
 
-void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, Binary_table *binary_table);
+void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, Binary_table *binary_table, int *line_num);

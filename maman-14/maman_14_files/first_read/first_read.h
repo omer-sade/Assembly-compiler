@@ -57,7 +57,7 @@ addidng symbol to symbols table. if symbol already there - doesnt add it to tabl
 to errors_str.
 updating DC. 
 */
-void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *DC);
+void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *line_num);
 
 
 /*
@@ -112,3 +112,45 @@ validates that the syntax is valid
 bool is_valid_syntax(const char *line, int start_index, int end_index, int *error_counter);
 
 bool is_valid_line_opcode(const char *line);
+
+/*
+counts how many times 'target' appears in 'line'
+*/
+int count(const char *line, char target);
+
+/*
+if line has 'extry' or 'enxtern' - returns true if there's a valid symbol
+*/
+bool has_symbol_entry_extern(const char *line,int *error_counter);
+
+/*
+returns true if a theres spaces in line between given indexes
+*/
+bool is_spaces(const char *line, int start, int end);
+
+/*
+get last char that isnt white char. 
+starting from 'end' (including) and looping backwards
+*/
+int get_last_char(const char *line, int end);
+
+/*
+returns index of first char that isnt white char.
+search start at index 'start'
+*/
+int get_first_char(const char *line, int start);
+
+/*
+assuming there is a valid external symbol declarition in line,
+return the symbol's indexes
+*/
+void find_external_symbol_indexes(const char *line, int *start, int *end);
+
+int get_last_char(const char *line, int end);
+
+/*
+being used only if there's 'extern' in 'line'
+addidng symbol to symbols table
+*/
+void addExternSymbol(Array *symbols_table, int *error_counter, const char *line, int *line_num);
+

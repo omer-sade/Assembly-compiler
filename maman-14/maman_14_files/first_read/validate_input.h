@@ -94,4 +94,8 @@ starting from 'end' (including) and looping backwards
 */
 int get_last_char(const char *line, int end);
 
+/*
+counts how many times 'target' appears in 'line'
+*/
+int count(const char *line, char target);
  

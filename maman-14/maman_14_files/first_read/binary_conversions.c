@@ -274,7 +274,7 @@ void other_words(char* src_operand, char* dest_operand, const char** registers, 
     }
 }
 
-void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, Binary_table *binary_table){
+void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, Binary_table *binary_table, int *line_num){
     const char* first_type[] = {"mov", "cmp", "add", "sub","lea", NULL}; //2 operands
     const char* second_type[] = {"not","clr","inc", "dec", "jmp", "bne", "red","prn","jsr", NULL}; //1 operand
     const char* third_type[] = {"rts","stop", NULL};// 0 operands

@@ -25,6 +25,7 @@ typedef struct {
     char name[30]; 
     bool ent;
     bool ext;
+    int line_num;
 } Symbol;
 
 // Define the struct for the array itself
@@ -42,7 +43,7 @@ new part end
 
 
 void initArray(Array *arr);
-void addArray(Array *arr, char *element);
+void addArray(Array *arr, char *element, int *line_num);
 int searchArray(Array *arr, char *element);
 
 
@@ -55,13 +56,24 @@ void initArray(Array *arr) {
     arr->size = 0;
 }
 
-void addArray(Array *arr, char *element) {
+void addArray(Array *arr, char *element, int *line_number) {
     if (arr->size % 10 == 0) {
         arr->symbol = (Symbol *) realloc(arr->symbol, (arr->size + 10) * sizeof(Symbol));
     }
-    Symbol s = {"", false, false};
+    Symbol s = {"", false, false, -1};
     strcpy(s.name, element);
+    s.line_num = *line_number;
     arr->symbol[arr->size] = s;
+    /*
+    if not extern
+    */
+    if(*line_number != -1){
+        arr->symbol[arr->size].line_num = *line_number;
+    }
+    else{
+        arr->symbol[arr->size].ext = true;
+    }
+    
     (arr->size) ++;
 }
 

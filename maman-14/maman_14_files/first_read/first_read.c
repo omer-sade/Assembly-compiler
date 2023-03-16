@@ -6,7 +6,7 @@
 
 void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *binary_table){
     
-    int DC = 0, IC = 0; 
+    int line_num = 100; 
     /*
     every time we find an error - increment by 1. at the end if its value isnt 0 - stop the code. 
     */
@@ -43,23 +43,29 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
         bool isEntry = is_entry(line, &error_counter);
         bool isExtern = is_extern(line, &error_counter);
         if(isData || isString){
-            if(is_symbol_found){
-                addSymbol(symbols_table, &error_counter, line, &DC);
+            if(is_symbol_found && !isExtern){
+                addSymbol(symbols_table, &error_counter, line, &line_num);
+            }
+            else if(is_symbol_found){
+                int temp = -1;
+                addSymbol(symbols_table, &error_counter, line, &temp);
             }
            
         }
         else if(isEntry || isExtern){
-            /*
-            didnt fully understand this part. this is line 9 in algorythm.
-            */
-           
+            if(isExtern){
+                int temp = -1;
+                addExternSymbol(symbols_table,&error_counter, line, &temp);
+                
+            }
+           continue;
         }
         /*
         If we got here than line doest contain data declaration nor extern / entry declaration. 
         Meaning it is instructions (with possibly a symbol).
         */
         else if(is_symbol_found){
-            addSymbol(symbols_table, &error_counter, line, &IC);
+            addSymbol(symbols_table, &error_counter, line, &line_num);
         }
        /*
        if there's no data, no string, no entry, no extern in line --> it has opcode
@@ -75,7 +81,7 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
 
         //int num_binary_lines = calc_binary_lines_num(line);
         if(current_error_num == error_counter){
-            create_binary_from_line(line, instructions, registers, binary_table);
+            create_binary_from_line(line, instructions, registers, binary_table, &line_num);
         }
         //IC += num_binary_lines;
     }
@@ -105,30 +111,27 @@ bool is_coma_last(const char *line){
     }
 }
 
-bool has_symbol(const char *line, int *error_counter){
 
+
+bool has_symbol(const char *line, int *error_counter){
     int i = 0;
     /*
     if this is a comment line
     */
     if (line[0] == ';')
         return false;
-
-    /*
-    counts how many ":" in line
-    */
-    int colon_counter = 0;
-
+    
+    int colon_counter = count(line, ':');
     /*
     checking how many ":" in line. if not 1, returns false
     */
-    for( i = 0; i < strlen(line) ; i ++){
-       if(line[i] == ':')
-            colon_counter ++;
-    }
-    if(colon_counter == 0)
+    char *isExten = strstr(line, ".extern");
+    char *isEntry = strstr(line, ".entry");
+    if(colon_counter == 0 && isEntry == NULL & isExten == NULL)
         return false;
-
+    if(isExten || isEntry){
+        return false;
+    }
     if(colon_counter > 1){
         printf("Invalid syntax, only 1 colon allowed - %s\n", line);
         *error_counter = *error_counter + 1;
@@ -170,30 +173,22 @@ bool has_symbol(const char *line, int *error_counter){
             }   
         }
    }
+   bool error_found = false;
    int index = first_char_index;
-    if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122))){
-        printf("Invalid symbol declaration in line: %s", line);
-        *error_counter = *error_counter + 1;
-        return false;       
-    }
+    if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122)))
+        error_found = true;
 
-    if(colon_index -  first_char_index > 30){
-        printf("Invalid symbol declaration in line (too long): %s", line);
-        *error_counter = *error_counter + 1;
-        return false;
-    }
-    /*
-    if error found:
-    ex: line is: "gfd gf:"
-    */
-    if( last_space_index > first_char_index){       
-        printf("Invalid symbol declaration in line: %s", line);
-        *error_counter = *error_counter + 1;
-        return false;
-    }
+    if(colon_index -  first_char_index > 30)
+        error_found = true;
+  
+    if( last_space_index > first_char_index)   
+        error_found = true;
 
     bool isValidSymbolName = is_valid_symbol_name(line, first_char_index, colon_index);
-    if(!isValidSymbolName){
+    if(!isValidSymbolName)
+        error_found = true;
+    
+    if(error_found){
         printf("Invalid symbol declaration in line: %s", line);
         *error_counter = *error_counter + 1;
         return false;
@@ -290,21 +285,21 @@ bool is_only_white_chars(char temp[]){
 /*
 help function for "is data". Checks if there's a number in string
 */
-    bool is_contains_number(char str[], int index){
-        int i;
-        
-        if(str[0] == '\0')
-            return false;
-
-        for(i = 0; i < index; i ++){
-            
-            if(isspace(str[i]))
-                continue;
-            if(isdigit(str[i]))
-                return true;
-        }
+bool is_contains_number(char str[], int index){
+    int i;
+    
+    if(str[0] == '\0')
         return false;
+
+    for(i = 0; i < index; i ++){
+        
+        if(isspace(str[i]))
+            continue;
+        if(isdigit(str[i]))
+            return true;
     }
+    return false;
+}
 
 
 bool is_data(const char *line, int *error_counter)
@@ -627,10 +622,41 @@ bool is_entry(const char *line, int *error_counter){
         *error_counter = *error_counter + 1;
         return false;
     }
+    bool error_found = false;
+    int last_char_index = get_last_char(line, strlen(line) -2);
+    int first_char_index = get_first_char(line, 6);
+    int index = first_char_index;
+
+    if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122)))
+        error_found = true;
+
+    if(last_char_index -  first_char_index > 30)
+        error_found = true;
+  
+    
+    if(is_spaces(line, first_char_index, last_char_index))   
+        error_found = true;
+
+    bool isValidSymbolName = is_valid_symbol_name(line, first_char_index, last_char_index);
+    if(!isValidSymbolName)
+        error_found = true;
+    
+    if(error_found){
+        printf("Invalid syntax in line: %s", line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
     return true;
 }
 
-
+bool is_spaces(const char *line, int start, int end){
+    int i;
+    for(i= start; i< end; i++){
+        if(isspace(line[i]))
+            return true;
+    }
+    return false;
+}
 
  bool is_extern(const char *line, int *error_counter){
     
@@ -646,12 +672,35 @@ bool is_entry(const char *line, int *error_counter){
    */
     int start_index = result - line;
     int end_index = start_index + 7;
-    
     /*
-    checking that there's a space or tab afer ".extern"
+    checking that there's a space or tab afer ".entry"
     */
     if(line[end_index] != 32 && line[end_index] != 9){
         printf("Invalid syntax in line: %s\n",line);
+        *error_counter = *error_counter + 1;
+        return false;
+    }
+    bool error_found = false;
+    int last_char_index = get_last_char(line, strlen(line) -2);
+    int first_char_index = get_first_char(line, 7);
+    int index = first_char_index;
+
+    if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122)))
+        error_found = true;
+
+    if(last_char_index -  first_char_index > 30)
+        error_found = true;
+  
+    
+    if(is_spaces(line, first_char_index, last_char_index))   
+        error_found = true;
+
+    bool isValidSymbolName = is_valid_symbol_name(line, first_char_index, last_char_index);
+    if(!isValidSymbolName)
+        error_found = true;
+    
+    if(error_found){
+        printf("Invalid syntax in line: %s", line);
         *error_counter = *error_counter + 1;
         return false;
     }
@@ -659,8 +708,8 @@ bool is_entry(const char *line, int *error_counter){
  }
 
 void find_symbol_indexes(const char *line, int  *start_index, int *end_index){
-    int i;
-    for(i = 0; i < strlen(line); i++){
+    int i=0;
+    for(i ; i < strlen(line); i++){
         if(isspace(line[i]))
             continue;
         break;
@@ -674,7 +723,44 @@ void find_symbol_indexes(const char *line, int  *start_index, int *end_index){
     *end_index = i;
 }
 
-void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *DC){
+void find_external_symbol_indexes(const char *line, int *start, int *end){
+    int len = strlen(line);
+    int first_char = get_first_char(line, 0);
+    first_char += 7;
+    first_char = get_first_char(line, first_char);
+    int last_char = get_last_char(line, strlen(line)-1);
+    *start = first_char;
+    *end = last_char +1;
+} 
+
+
+void addExternSymbol(Array *symbols_table, int *error_counter, const char *line, int *line_num){
+    int start_index;
+    int end_index;
+    find_external_symbol_indexes(line, &start_index, &end_index);
+    
+     char symbol[LINE_SIZE+1]; // define a character array with a fixed maximum length
+
+    // Copy substring to 'symbol' string
+    int i;
+    for (i = start_index; i <= end_index - 1; i++) {
+        symbol[i - start_index] = line[i];
+    }
+    symbol[i - start_index] = '\0';
+
+    int index = searchArray(symbols_table, symbol);
+
+    if (index == -1){
+        addArray(symbols_table, symbol, line_num);
+    }
+        
+    else {
+        printf("Error: multiple definitions of symbol '%s'\n", symbol);
+        *error_counter = *error_counter + 1;
+    }
+}
+
+void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *line_num){
     
    /*
     1. find symbol in line and save it as a variable
@@ -685,6 +771,12 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
 
     int start_index = 0;
     int end_index = 0;
+    char *isExtern = strstr(line, ".extern");
+    if(isExtern != NULL){
+        addExternSymbol(symbols_table, error_counter, line, line_num);
+        return;
+    }
+    
     find_symbol_indexes(line, &start_index, &end_index);
 
     char symbol[LINE_SIZE+1]; // define a character array with a fixed maximum length
@@ -698,8 +790,10 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
 
     int index = searchArray(symbols_table, symbol);
 
-    if (index == -1)
-        addArray(symbols_table, symbol);
+    if (index == -1){
+        addArray(symbols_table, symbol, line_num);
+    }
+        
     else {
         printf("Error: multiple definitions of symbol '%s'\n", symbol);
         *error_counter = *error_counter + 1;
