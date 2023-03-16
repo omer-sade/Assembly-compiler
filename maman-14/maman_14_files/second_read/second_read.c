@@ -28,7 +28,7 @@ void get_is_extern_and_line_num(Array *symbols_table ,char *symbol, int *line_nu
 
 }
 
-void reading_file_second_time(Array *symbols_table, const char **instructions, FILE *p_outputFile){
+void reading_file_second_time(Array *symbols_table, Binary_table *instructions_table, const char **instructions, FILE *p_outputFile){
    
     char line[LINE_SIZE];
    
@@ -95,9 +95,8 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
     */
 
     if(extern_couner >0){
-        /*
-        create file with extern symbols
-        */
+        char *file_name = "externs.txt";
+        create_extern_file(symbols_table, instructions_table, file_name);
     }
     if(entry_table.size >0){
         char *file_name = "entries.txt";
@@ -106,6 +105,33 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
     free(entry_table.symbol);
    
 }
+
+void create_extern_file(Array *table,Binary_table* instructions_table, char *file_name){
+    FILE *extern_file = fopen(file_name, "w");
+    if(extern_file == NULL){
+        printf("Error: Could not open entry file.\n");
+        return;
+    }
+    
+    int i;
+    for(i = 0; i< instructions_table->size; i++){
+        int line_num = 0;
+        int is_extern = 0;
+        char *symbol = instructions_table->table[i].bin_str;
+        if(symbol[0] =='?'){
+            char *new_symbol = (symbol +1);
+            get_is_extern_and_line_num(table, new_symbol, &line_num, &is_extern);
+            if(is_extern){
+                fprintf(extern_file,"%s\t%d\n", new_symbol, (i+100));
+            }
+            
+        }
+        
+    }
+    fclose(extern_file);
+}
+
+
 
 void create_entry_file(Array *table, char *file_name){
     FILE *entry_file = fopen(file_name, "w");
