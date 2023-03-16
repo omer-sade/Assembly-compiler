@@ -65,7 +65,10 @@ int main(){
 
     // Print the size of the array
     printf("Size of the array: %d\n", binaryTable.size);
-
+    int k;
+    for(k = 0; k < symbols_table.size; k++){
+        printf("symbol = %s, line num = %d\n", symbols_table.symbol[k].name, symbols_table.symbol[k].line_num);
+    }
 
     fclose(p_file_open_macros);
     p_file_open_macros = fopen("file_open_macros.txt","r");
