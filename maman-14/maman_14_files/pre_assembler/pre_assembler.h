@@ -21,6 +21,6 @@ runs the calls the preassembler to run and free all allocated memory*/
 FILE *preAssembler(FILE *fp);
 
 struct Macro {
-	char word[MAX_LINE];
-	char *content;
+	char word[MAX_LINE]; /*macro name*/
+	char *content; /*macro content*/
 };

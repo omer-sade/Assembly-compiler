@@ -6,7 +6,7 @@ int find_string(const char **array, const char *str);//NOT SURE IF SHOULD BE HER
 // Define the struct for each element of the table
 typedef struct {
     int line_num;
-    char bin_str[15]; 
+    char bin_str[31]; 
 } Binary_line;
 
 // Define the struct for the array (table) itself

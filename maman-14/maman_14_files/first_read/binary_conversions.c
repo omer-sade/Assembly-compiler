@@ -216,22 +216,23 @@ char* registers_addressing(char* orig_reg, char* dest_reg) {
 
 void other_words(char* src_operand, char* dest_operand, const char** registers, \
 Binary_table *Instructions_table, int* line_num){
-    if(src_operand == NULL){
-        char *temp;
+    if(src_operand == NULL){ //if only dest exists
+        char *temp = (char*)calloc(31, sizeof(char));
         if(find_string(registers,dest_operand)!=-1){//if dest a register
             temp = registers_addressing(NULL, dest_operand);
             addBinaryLine(Instructions_table, temp, line_num);
-            free(temp);
         }
         else if(dest_operand[0]=='#'){//if dest a number
             temp = decimalToBinary(atoi(dest_operand+1),12);
             strcat(temp, "00");
             addBinaryLine(Instructions_table, temp, line_num);
-            free(temp);
         }
         else{//if dest a symbol
-            addBinaryLine(Instructions_table, "?", line_num);
+            strcat(temp,"?");
+            strcat(temp, dest_operand);
+            addBinaryLine(Instructions_table, temp, line_num);
         }
+        free(temp);
         return;
     }
     else if((find_string(registers,src_operand) != -1) && (find_string(registers,dest_operand) != -1)){//if both registers
@@ -241,38 +242,41 @@ Binary_table *Instructions_table, int* line_num){
         free(temp1);
         return;
     }
-    else if(src_operand != NULL){
-        char *temp2;
+    else if(src_operand != NULL){ //if src exists
+        char *temp2 = (char*)calloc(31, sizeof(char));
         if(find_string(registers,src_operand)!=-1){//if source a register
             temp2 = registers_addressing(src_operand, NULL);
             addBinaryLine(Instructions_table, temp2, line_num);
-            free(temp2);
+            
         }
         else if(src_operand[0]=='#'){//if source a number
             temp2 = decimalToBinary(atoi(src_operand+1),12);
             strcat(temp2, "00");
             addBinaryLine(Instructions_table, temp2, line_num);
-            free(temp2);
         }
         else{//if source a symbol
-            addBinaryLine(Instructions_table,"?", line_num);
+            strcat(temp2,"?");
+            strcat(temp2, src_operand);
+            addBinaryLine(Instructions_table,temp2, line_num);
         }
+        free(temp2);
     }
-    char *temp3;
+    char *temp3 = (char*)calloc(31, sizeof(char));
     if(find_string(registers,dest_operand)!=-1){//if dest a register
         temp3 = registers_addressing(NULL, dest_operand);
         addBinaryLine(Instructions_table, temp3, line_num);
-        free(temp3);
     }
     else if(dest_operand[0]=='#'){//if dest a number
         temp3 = decimalToBinary(atoi(dest_operand+1),12);
         strcat(temp3, "00");
         addBinaryLine(Instructions_table, temp3, line_num);
-        free(temp3);
     }
     else{//if dest a symbol
-        addBinaryLine(Instructions_table, "?", line_num);
+        strcat(temp3,"?");
+        strcat(temp3, dest_operand);
+        addBinaryLine(Instructions_table, temp3, line_num);
     }
+    free(temp3);
 }
 
 void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, \
@@ -305,7 +309,7 @@ Binary_table *instructions_table, Binary_table *data_table, int *line_num){
         char *check_word;
         char first_operand[80];
         strcpy(first_operand,get_next_word(line, &position));
-        if((check_word = get_next_word(line, &position)) != NULL){
+        if((check_word = get_next_word(line, &position)) != NULL){ /*jump addressing instruction*/
             strcpy(src_operand,check_word);
             strcpy(dest_operand,get_next_word(line, &position));
             
@@ -320,7 +324,9 @@ Binary_table *instructions_table, Binary_table *data_table, int *line_num){
             strcat(first_word, "00");//bits 1-0
             addBinaryLine(instructions_table, first_word, line_num);
             free(first_word);
-            addBinaryLine(instructions_table, "?", line_num);
+            char temp[31] = {'?'};  /*for the unknown symbol*/
+            strcat(temp, first_operand); 
+            addBinaryLine(instructions_table, temp, line_num);
             other_words(src_operand, dest_operand, registers, instructions_table, line_num);
         }
         else{
