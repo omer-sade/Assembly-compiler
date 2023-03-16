@@ -37,7 +37,7 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
     int extern_couner = 0;
     Array entry_table;
     initArray(&entry_table);
-
+  
     while(fgets(line, sizeof(line), p_outputFile) != NULL){
         
         if(is_empty(line) || is_comment(line))
@@ -75,6 +75,7 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
             char *symbol1 = entry_table.symbol[i].name;
             char *symbol2 = symbols_table->symbol[j].name; 
             if(strcmp(symbol1, symbol2) ==0){
+                symbols_table->symbol[j].ent = true;
                 found = true;
             }
         }
@@ -83,9 +84,6 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
             printf("Error: declared entry symbol '%s' without initialzing it.\n", entry_table.symbol[i].name);
         }
     }
-
-    
-    
 
     
     if(error_counter > 0){
@@ -102,10 +100,27 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
         */
     }
     if(entry_table.size >0){
-        /*
-        create file with extern symbols
-        */
+        char *file_name = "entries.txt";
+        create_entry_file(symbols_table, file_name);
     }
-
+    free(entry_table.symbol);
    
+}
+
+void create_entry_file(Array *table, char *file_name){
+    FILE *entry_file = fopen(file_name, "w");
+    if(entry_file == NULL){
+        printf("Error: Could not open entry file.\n");
+        return;
+    }
+        
+    int i;
+    for (i = 0; i < table->size; i++){
+        if(table->symbol[i].ent){
+            char *temp = table->symbol[i].name;
+            fprintf(entry_file, "%s\t%d\n", table->symbol[i].name, table->symbol[i].line_num);
+        }
+        
+    }
+    fclose(entry_file);
 }
