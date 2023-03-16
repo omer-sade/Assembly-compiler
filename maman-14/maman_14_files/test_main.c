@@ -30,8 +30,8 @@ int main(){
     (see page 42 in instructions file)
     */
     Array symbols_table;
+    //initArray(&symbols_table, sizeof(char[100])); ASK OMER***
     initArray(&symbols_table);
-
     /*
     contains all valid instructions: mov, sub, inc.. 
     16 total. 
@@ -51,17 +51,34 @@ int main(){
     "inc", "dec", "jmp", "bne", "red","prn","jsr","rts","stop", NULL};
     const char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7", NULL};
 
-    Binary_table binaryTable; // Declare a new binary_table
-    initBinaryTable(&binaryTable); // Initialize the binary_table
+    Binary_table instructions_table; // Declare a new binary_table
+    initBinaryTable(&instructions_table); // Initialize the binary_table
+
+    Binary_table data_table; // Declare a new binary_table
+    initBinaryTable(&data_table); // Initialize the binary_table
 
     /*
     reading file for the first time 
     */
-    reading_file_first_time(&symbols_table, instructions, p_file_open_macros, registers, &binaryTable);
+    reading_file_first_time(&symbols_table, instructions, p_file_open_macros, registers, &instructions_table, &data_table);
+    
 
-    for (int i = 0; i < binaryTable.size; i++) {
-        printf("line_num: %d, bin_str: %s\n", binaryTable.table[i].line_num, binaryTable.table[i].bin_str);
+
+    for (int i = 0; i < instructions_table.size; i++) {
+        printf("line_num: %d, bin_str: %s\n", instructions_table.table[i].line_num, instructions_table.table[i].bin_str);
     }
+
+    // Print the size of the array
+    printf("Size of the array: %d\n", instructions_table.size);
+
+    for (int i = 0; i < data_table.size; i++) {
+        printf("line_num: %d, bin_str: %s\n", data_table.table[i].line_num, data_table.table[i].bin_str);
+    }
+
+    // Print the size of the array
+    printf("Size of the array: %d\n", data_table.size);
+
+
 
     fclose(p_file_open_macros);
     p_file_open_macros = fopen("file_open_macros.txt","r");
@@ -72,7 +89,8 @@ int main(){
 
 
     fclose(p_file_open_macros); 
-    free(symbols_table.symbol);
-    free(binaryTable.table);
+    //free(symbols_table.data); ASK OMER***
+    free(instructions_table.table);
+    free(data_table.table);
     
 }

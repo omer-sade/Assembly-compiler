@@ -22,7 +22,7 @@ Function that analyzes origin file for first time. Translates lines to binary if
 save symbols (that will be translated to binary in the second read).
 Reads from "pfile", writes binary language to "p_outputFile"
 */
-void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *binary_table);
+void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *instructions_table, Binary_table *data_table);
 
 /*
 Converts ALL remaining lines to binary. 

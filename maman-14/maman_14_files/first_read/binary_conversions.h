@@ -17,7 +17,7 @@ typedef struct {
 
 void initBinaryTable(Binary_table *tablePtr);
 
-void addBinaryLine(Binary_table *tablePtr, char *bin_str);
+void addBinaryLine(Binary_table *tablePtr, char *bin_str, int *line_num);
 
 
 
@@ -31,9 +31,9 @@ char* decimalToBinary(int decimalNum, int size);
 char* opecode_to_binary(const char **arr, const char *str);
 
 
-void string_to_binary(char* str, Binary_table *binary_table);
+void string_to_binary(char* str, Binary_table *data_table, int *line_num);
 
-void data_to_binary(char* data, Binary_table *binary_table, int *position);
+void data_to_binary(char* data, Binary_table *data_table, int *position, int *line_num);
 
 char* registers_addressing(char* orig_reg, char* dest_reg);
 
@@ -46,6 +46,6 @@ int isSymbol(char* str);
 char *operands_params(char *orig, char *dest, const char** registers);
 
 
-void other_words(char* src_operand, char* dest_operand,const char** registers, Binary_table *binary_table);
+void other_words(char* src_operand, char* dest_operand,const char** registers, Binary_table *binary_table, int *line_num);
 
-void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, Binary_table *binary_table, int *line_num);
+void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, Binary_table *instructions_table, Binary_table *data_table, int *line_num);

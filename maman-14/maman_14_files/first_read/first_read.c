@@ -4,7 +4,7 @@
 
 
 
-void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *binary_table){
+void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *instructions_table, Binary_table *data_table){
     
     int line_num = 100; 
     /*
@@ -81,7 +81,7 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
 
         //int num_binary_lines = calc_binary_lines_num(line);
         if(current_error_num == error_counter){
-            create_binary_from_line(line, instructions, registers, binary_table, &line_num);
+            create_binary_from_line(line, instructions, registers, instructions_table, data_table, &line_num);
         }
         //IC += num_binary_lines;
     }
@@ -92,7 +92,8 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
     if(error_counter > 0){
         free(symbols_table->symbol);
         fclose(p_outputFile);
-        free(binary_table->table);
+        free(instructions_table->table);
+        free(data_table->table);
         exit(1);
     }
 
