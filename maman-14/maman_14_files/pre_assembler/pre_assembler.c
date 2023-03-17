@@ -12,10 +12,13 @@ int mcr_arr_size = 0;/*macro array alloc size*/
 
 
 void free_mcr_cont() {
-	int i;
+    int i;
     for (i = 0; i < mcr_arr_len; i++) {
         free(mcr_arr[i].content);
+        mcr_arr[i].content = NULL;
     }
+    mcr_arr_len = 0;
+    mcr_arr_size = 0;
 }
 
 int is_macro(char *str){
@@ -98,9 +101,6 @@ void pre_assembler(FILE *file, FILE *output_file) {
 		}
 	}
 	fseek(output_file, 0, SEEK_SET); /*set the new file ptr to the beginning*/
-	fclose(file);
 	
 	free_mcr_cont();
-	free(mcr_arr);
-
 }
