@@ -5,22 +5,6 @@
 
 #define INITIAL_CAPACITY 100
 
-// typedef struct {
-//     void *data;
-//     /*
-//      size - how many items are currently in the array
-//     */
-//     size_t size; 
-//     /*
-//     capacity - max items the array is able to hold. when size equals capacity - increase capacity
-//     */
-//     size_t capacity;
-// } Array;
-
-/*
-new part start
-*/
-// Define the struct for each element of the array
 typedef struct {
     char name[30]; 
     bool ent;
@@ -28,23 +12,12 @@ typedef struct {
     int line_num;
 } Symbol;
 
-// Define the struct for the array itself
 typedef struct {
     Symbol *symbol;
     int size;
 } Array;
 
-/*
-new part end
-*/
 
-
-
-
-
-void initArray(Array *arr);
-void addArray(Array *arr, char *element, int *line_num);
-int searchArray(Array *arr, char *element);
 
 
 void initArray(Array *arr) {

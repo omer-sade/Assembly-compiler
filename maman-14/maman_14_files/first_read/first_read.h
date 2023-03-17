@@ -154,3 +154,12 @@ addidng symbol to symbols table
 */
 void addExternSymbol(Array *symbols_table, int *error_counter, const char *line, int *line_num);
 
+/*
+looking for all uncheckd extreme cases
+*/
+bool find_all_errors(const char *line);
+
+/*
+validating that only allowed chars in line
+*/
+bool validate_ascii(const char *line);

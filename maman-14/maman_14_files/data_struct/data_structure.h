@@ -5,9 +5,19 @@
 #include <stdbool.h>
 #define INITIAL_CAPACITY 100
 
+/*
+creating an array
+*/
+void initArray(Array *arr);
 
-void initArray(Array *arr, size_t data_size);
-void addArray(Array *arr, void *element, size_t data_size);
-int searchArray(Array *arr, void *element, size_t data_size, int (*cmp)(const void*, const void*));
-int cmpInt(const void *a, const void *b);
-int cmpStr(const void *a, const void *b) ;
+/*
+addidng element to array.
+Line num will be assigned to the symbol (element)
+*/
+void addArray(Array *arr, char *element, int *line_num);
+/*
+searching element in array
+*/
+int searchArray(Array *arr, char *element);
+
+
