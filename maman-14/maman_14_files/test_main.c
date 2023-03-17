@@ -25,18 +25,8 @@ int main(){
     }
    
 
-    /*
-    randomly chose 100. probably will need to change
-    (see page 42 in instructions file)
-    */
     Array symbols_table;
-    //initArray(&symbols_table, sizeof(char[100])); ASK OMER***
     initArray(&symbols_table);
-    /*
-    contains all valid instructions: mov, sub, inc.. 
-    16 total. 
-    
-    */
     
     /*
     opening all macros
@@ -79,7 +69,6 @@ int main(){
     printf("Size of the array: %d\n", data_table.size);
 
 
-
     fclose(p_file_open_macros);
     p_file_open_macros = fopen("file_open_macros.txt","r");
     /*
@@ -89,7 +78,7 @@ int main(){
 
 
     fclose(p_file_open_macros); 
-    //free(symbols_table.data); ASK OMER***
+    free(symbols_table.symbol);
     free(instructions_table.table);
     free(data_table.table);
     
