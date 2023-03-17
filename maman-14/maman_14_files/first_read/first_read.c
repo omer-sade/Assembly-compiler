@@ -63,8 +63,10 @@
         else if(isEntry || isExtern){
             if(isExtern){
                 int temp = -1;
-                addExternSymbol(symbols_table,&error_counter, line, &temp);
-                
+                add_Extern_Entry_Symbol(symbols_table,&error_counter, line, &temp);
+            }
+            else{
+                add_Extern_Entry_Symbol(symbols_table,&error_counter, line, &line_num);
             }
            continue;
         }
@@ -818,11 +820,32 @@ void find_external_symbol_indexes(const char *line, int *start, int *end){
     *end = last_char +1;
 } 
 
-
-void addExternSymbol(Array *symbols_table, int *error_counter, const char *line, int *line_num){
+void find_entry_symbol_indexes(const char *line, int *start, int *end){
+    int len = strlen(line);
+    int first_char = get_first_char(line, 0);
+    first_char += 6;
+    first_char = get_first_char(line, first_char);
+    int last_char = get_last_char(line, strlen(line)-1);
+    *start = first_char;
+    *end = last_char +1;
+} 
+void add_Extern_Entry_Symbol(Array *symbols_table, int *error_counter, const char *line, int *line_num){
     int start_index;
     int end_index;
-    find_external_symbol_indexes(line, &start_index, &end_index);
+    
+    char *isExtern = strstr(line, ".extern");
+    char *isEntry = strstr(line, ".entry");
+    int type = 0;
+    if(isExtern != NULL){
+        type = 1;
+        find_external_symbol_indexes(line, &start_index, &end_index);
+    }
+    else{
+        type =2;
+        find_entry_symbol_indexes(line, &start_index, &end_index);
+    }
+        
+    
     
      char symbol[LINE_SIZE+1]; // define a character array with a fixed maximum length
 
@@ -836,7 +859,7 @@ void addExternSymbol(Array *symbols_table, int *error_counter, const char *line,
     int index = searchArray(symbols_table, symbol);
 
     if (index == -1){
-        addArray(symbols_table, symbol, line_num);
+        addArray(symbols_table, symbol, line_num, type);
     }
         
     else {
@@ -857,8 +880,10 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
     int start_index = 0;
     int end_index = 0;
     char *isExtern = strstr(line, ".extern");
-    if(isExtern != NULL){
-        addExternSymbol(symbols_table, error_counter, line, line_num);
+    char *isEntry = strstr(line, ".entry");
+
+    if(isExtern != NULL || isEntry != NULL){
+        add_Extern_Entry_Symbol(symbols_table, error_counter, line, line_num);
         return;
     }
     
@@ -876,7 +901,7 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
     int index = searchArray(symbols_table, symbol);
 
     if (index == -1){
-        addArray(symbols_table, symbol, line_num);
+        addArray(symbols_table, symbol, line_num, 0);
     }
         
     else {

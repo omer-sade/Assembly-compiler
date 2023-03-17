@@ -29,24 +29,20 @@ void initArray(Array *arr) {
     arr->size = 0;
 }
 
-void addArray(Array *arr, char *element, int *line_number) {
+void addArray(Array *arr, char *element, int *line_number, int type) {
     if (arr->size % 10 == 0) {
         arr->symbol = (Symbol *) realloc(arr->symbol, (arr->size + 10) * sizeof(Symbol));
     }
     Symbol s = {"", false, false, -1};
     strcpy(s.name, element);
     s.line_num = *line_number;
-    arr->symbol[arr->size] = s;
-    /*
-    if not extern
-    */
-    if(*line_number != -1){
-        arr->symbol[arr->size].line_num = *line_number;
-    }
-    else{
-        arr->symbol[arr->size].ext = true;
-    }
     
+    if(type == 1)
+        s.ext = true;
+    else if(type ==2)
+        s.ent = true;
+
+    arr->symbol[arr->size] = s;
     (arr->size) ++;
 }
 

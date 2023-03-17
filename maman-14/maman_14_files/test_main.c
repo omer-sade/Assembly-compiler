@@ -67,7 +67,10 @@ int main(){
 
     // Print the size of the array
     printf("Size of the array: %d\n", data_table.size);
-
+int i;
+for(i=0; i < symbols_table.size; i++){
+    printf("symbol: %s, extern = %d, entry = %d, line num = %d\n", symbols_table.symbol[i].name, symbols_table.symbol[i].ext, symbols_table.symbol[i].ent, symbols_table.symbol[i].line_num);
+}
 
     fclose(p_file_open_macros);
     p_file_open_macros = fopen("file_open_macros.txt","r");

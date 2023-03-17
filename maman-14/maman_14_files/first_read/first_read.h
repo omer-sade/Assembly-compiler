@@ -146,13 +146,20 @@ return the symbol's indexes
 */
 void find_external_symbol_indexes(const char *line, int *start, int *end);
 
+/*
+assuming there is a valid entry symbol declarition in line,
+return the symbol's indexes
+*/
+void find_entry_symbol_indexes(const char *line, int *start, int *end);
+
+
 int get_last_char(const char *line, int end);
 
 /*
 being used only if there's 'extern' in 'line'
 addidng symbol to symbols table
 */
-void addExternSymbol(Array *symbols_table, int *error_counter, const char *line, int *line_num);
+void add_Extern_Entry_Symbol(Array *symbols_table, int *error_counter, const char *line, int *line_num);
 
 /*
 looking for all uncheckd extreme cases
