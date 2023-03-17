@@ -28,7 +28,7 @@ void get_is_extern_and_line_num(Array *symbols_table ,char *symbol, int *line_nu
 
 }
 
-void reading_file_second_time(Array *symbols_table, Binary_table *instructions_table, const char **instructions, FILE *p_outputFile){
+void reading_file_second_time(Array *symbols_table, Binary_table *instructions_table, const char **instructions, FILE *p_outputFile, char *filename){
    
     char line[LINE_SIZE];
    
@@ -52,7 +52,7 @@ void reading_file_second_time(Array *symbols_table, Binary_table *instructions_t
         if(is_data || is_string)
             continue;
         if(is_extern){
-            extern_counter ++;
+            extern_counter++;
             continue;
         }
         if(is_entry){
@@ -84,14 +84,13 @@ void reading_file_second_time(Array *symbols_table, Binary_table *instructions_t
         printf("Errors found in file. Terminating program.\n");
         return;
     }    
-  
-    
+    char file_name[100];
     if(extern_counter >0){
-        char *file_name = "externs.txt";
+        sprintf(file_name, "%s.ext", filename);
         create_extern_file(symbols_table, instructions_table, file_name);
     }
     if(entry_table.size >0){
-        char *file_name = "entries.txt";
+        sprintf(file_name, "%s.ent", filename);
         create_entry_file(symbols_table, file_name);
     }
 

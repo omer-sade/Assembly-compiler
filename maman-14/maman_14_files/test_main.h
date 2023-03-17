@@ -10,8 +10,7 @@
 #include "second_read/second_read.c"
 #include "pre_assembler/pre_assembler.c"
 
-//REMOVE IT
-//#include "second_read/second_read_bar.c"
+
 
 /*
 Reads origing file and "opens" all macros. Prepares the code for it to be readable by "reading
@@ -30,7 +29,7 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
 Converts ALL remaining lines to binary. 
 Reads from "pfile", writes binary language to "p_outputFile"
 */
-void reading_file_second_time(Array *symbols_table, Binary_table *instructions_table, const char **instructions, FILE *p_outputFile);
+void reading_file_second_time(Array *symbols_table, Binary_table *instructions_table, const char **instructions, FILE *p_outputFile, char *filename);
 
 /*
 adds all the 16 types of instructions to the instructions array (mov, not, jmp, etc..)
@@ -48,8 +47,11 @@ converts binary code to slashes and dots
 void convert_to_dots_slashes(char *input, char *output);
 
 /*
-adds binary data (slashes and dots) to file
+adds binary data line (slashes and dots) to file
 */
 void get_length_and_converted_string(int num, char *input, FILE *fp);
 
-
+/*
+Builds the object file from the instructions table and data table values
+*/
+void build_object_file(Binary_table *instructions_table, Binary_table *data_table, FILE *object_file);
