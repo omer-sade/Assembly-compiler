@@ -4,7 +4,7 @@
 
 
 
-void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *instructions_table, Binary_table *data_table){
+	void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *instructions_table, Binary_table *data_table){
     
     int line_num = 100; 
     /*
@@ -31,6 +31,14 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
         for tracking errors in specific line
         */
         int current_error_num = error_counter;
+        bool valid_syntax = find_all_errors(line);
+        
+        bool valid_ascii_in_line = validate_ascii(line);
+        if(!valid_ascii_in_line || !valid_syntax){
+            printf("Invalid syntax in line: %s\n",line);
+            error_counter++;
+            continue;
+        }
         
         is_symbol_found = false;
         
@@ -70,7 +78,7 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
        /*
        if there's no data, no string, no entry, no extern in line --> it has opcode
        */
-        else if(current_error_num == error_counter){
+        if(current_error_num == error_counter){
             if(!is_empty(line) && !isData && !isString && !isEntry && !isExtern){
                 if(!valid_instruct(line, instructions, &error_counter) ||!is_valid_line_opcode(line)){
                     printf("Invalid syntax in line: %s\n", line);
@@ -81,8 +89,7 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
 
         //int num_binary_lines = calc_binary_lines_num(line);
         if(current_error_num == error_counter){
-            create_binary_from_line(line, instructions, registers, instructions_table, data_table, &line_num);
-        }
+            create_binary_from_line(line, instructions, registers, instructions_table, data_table, &line_num);        }
         //IC += num_binary_lines;
     }
     
@@ -92,7 +99,7 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
     if(error_counter > 0){
         free(symbols_table->symbol);
         fclose(p_outputFile);
-        free(instructions_table->table);
+        free(instructions_table->table);	
         free(data_table->table);
         exit(1);
     }
@@ -100,6 +107,62 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
 
 }
 
+int count_substring(const char *string, const char *substring) {
+    int count = 0;
+    size_t substring_len = strlen(substring);
+    const char *match = strstr(string, substring);
+    while (match != NULL) {
+        count++;
+        match = strstr(match + substring_len, substring);
+    }
+    return count;
+}
+
+bool is_letter(char c){
+     if(!((c >= 65 && c <= 90)  || (c >= 97 && c <= 122)))
+        return false;
+    return true;
+}
+
+bool find_all_errors(const char *line){
+    bool valid = true;
+    
+    char *hstg = strstr(line, "#");
+    if(hstg != NULL){
+        if(!(isdigit(hstg[1]) || (hstg[1] == '-' || hstg[1] == '+'))){
+                valid = false;
+            }
+    }
+    
+    /*
+    after a colon must come letter or number
+    */
+    int colon_index = get_index_of(line, 58, 0);
+    if(colon_index != -1){
+        int next_char = get_first_char(line, colon_index+1);
+        if(!(is_letter(line[next_char]) || isdigit(line[next_char]) || line[next_char] == '.'))
+            valid = false;
+    }
+    
+
+
+    return valid;
+}
+
+bool validate_ascii(const char *line) {
+    const char *ptr = line;
+    int i;
+    for(i=0 ; i< strlen(line)-2; i++){
+        char c = line[i];
+         if (!((c >= 'A' && c <= 'Z') || isspace(c) || (c >= 'a' && c <= 'z') || (c == '.') ||
+              (c == '#') || (c == '+') || (c == '-') || (c == ',') || (c == ':') ||
+              (c == '(') || (c == ')') || (c == '"') || (c >= '0' && c <= '9'))) {
+            return false; 
+        }
+    }
+   
+    return true;
+}
 bool is_coma_last(const char *line){
     int i;
     for(i = strlen(line)-2; i > 0 ; i--){
@@ -163,6 +226,7 @@ bool has_symbol(const char *line, int *error_counter){
    int last_space_index = -1;
    int first_char_index = 0;
    bool found_first_char = false;
+    bool error_found = false;
 
    for(i = 0; i < colon_index; i++){
         if(line[i] == 32)
@@ -173,8 +237,11 @@ bool has_symbol(const char *line, int *error_counter){
                 found_first_char = true;
             }   
         }
+        else{
+            error_found = true;
+        }
    }
-   bool error_found = false;
+   
    int index = first_char_index;
     if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122)))
         error_found = true;
@@ -599,6 +666,17 @@ bool is_string(const char *line, int *error_counter)
     return true;
 }
 
+bool is_numbers_or_letters(const char *line,int start, int end){
+    int i ; 
+    for(i = start; i <= end; i++){
+        if(!((line[i]>=48 && line[i]<=57) ||(line[i]>=65 && line[i]<=90)
+         ||  (line[i]>=97 && line[i]<=122))){
+            return false;
+         }
+    }
+    return true;
+}
+
 bool is_entry(const char *line, int *error_counter){
     
     char *word = ".entry";
@@ -631,6 +709,9 @@ bool is_entry(const char *line, int *error_counter){
     if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122)))
         error_found = true;
 
+    bool isNumbersOrLetters = is_numbers_or_letters(line, first_char_index, last_char_index);
+    if(!isNumbersOrLetters)
+        error_found = true;
     if(last_char_index -  first_char_index > 30)
         error_found = true;
   
@@ -689,6 +770,9 @@ bool is_spaces(const char *line, int start, int end){
     if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122)))
         error_found = true;
 
+    bool isNumbersOrLetters = is_numbers_or_letters(line, first_char_index, last_char_index);
+        if(!isNumbersOrLetters)
+            error_found = true;
     if(last_char_index -  first_char_index > 30)
         error_found = true;
   
@@ -891,8 +975,16 @@ bool valid_instruct(const char *line, const char **instructions, int *error_coun
     }
     
     if(index == -1){
+         free(opcode); 
         return false;
     }
+
+    int count = count_substring(line, opcode);
+    if(count != 1){
+        free(opcode); 
+        return false;
+    }
+
     free(opcode); 
     return true;
 }
