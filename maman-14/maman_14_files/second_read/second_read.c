@@ -1,5 +1,33 @@
 #include "second_read.h"
 
+/*
+function for bar
+*/
+void get_is_extern_and_line_num(Array *symbols_table ,char *symbol, int *line_num, int *is_extern){
+    int i =0; 
+    i = searchArray(symbols_table, symbol);
+    if(i != -1){
+        *line_num = symbols_table->symbol[i].line_num;
+        if(symbols_table->symbol[i].ext)
+            *is_extern = 1;
+    }
+    else{
+        /*
+        symbol not in table (you can delete if you want, added this part for clarity)
+        */
+    }
+
+    /*
+    EXAMPLE HOW TO USE
+
+    char *symbol = "boo";
+    int line_num = 0;
+    int is_extern = 0;
+    get_is_extern_and_line_num(symbols_table,symbol, &line_num, &is_extern);
+    */
+
+}
+
 void reading_file_second_time(Array *symbols_table, const char **instructions, FILE *p_outputFile){
    
     char line[LINE_SIZE];
@@ -56,8 +84,9 @@ void reading_file_second_time(Array *symbols_table, const char **instructions, F
     }
 
     
+    
 
-
+    
     if(error_counter > 0){
         printf("Errors found in file. Terminating program.\n");
         return;
