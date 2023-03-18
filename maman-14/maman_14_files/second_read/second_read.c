@@ -119,11 +119,6 @@ void create_entry_file(Array *table, char *file_name){
         if(table->symbol[i].ent){
             char *temp = table->symbol[i].name;
             fprintf(entry_file, "%s\t%d\n", table->symbol[i].name, table->symbol[i].line_num);
-            // fprintf(entry_file, "%s", "\t");
-            // char *line_num = malloc(sizeof(char) * 10);
-            // sprintf(line_num, "%d", table->symbol[i].line_num);
-            // fprintf(entry_file, "%s", line_num);
-            // free(line_num);
         }
         
     }

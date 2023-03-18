@@ -1,5 +1,6 @@
 #define SYMBOL_LEN 30
 
+
 /*
 create an entry file from array that consists only 'entry' symbols
 */
