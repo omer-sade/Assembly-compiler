@@ -113,7 +113,6 @@ void create_entry_file(Array *table, char *file_name){
         return;
     }
         
-    
     int i;
     for (i = 0; i < table->size; i++){
         if(table->symbol[i].ent){
