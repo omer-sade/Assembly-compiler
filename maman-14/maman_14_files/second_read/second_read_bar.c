@@ -19,7 +19,7 @@ void symbolToBinary(Binary_table *instructions_table){
             }
             strcpy(instructions_table->table[i].bin_str,temp_bin);
         }
-            instructions_table->table[i].line_num
+            instructions_table->table[i].line_num;
     }
 }
 
