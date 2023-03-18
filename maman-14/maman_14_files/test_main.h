@@ -10,6 +10,8 @@
 #include "second_read/second_read.c"
 #include "pre_assembler/pre_assembler.c"
 
+//REMOVE IT
+#include "second_read/second_read_bar.c"
 
 /*
 Reads origing file and "opens" all macros. Prepares the code for it to be readable by "reading
