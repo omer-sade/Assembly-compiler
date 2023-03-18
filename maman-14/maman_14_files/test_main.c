@@ -54,20 +54,7 @@ int main(){
     reading_file_first_time(&symbols_table, instructions, p_file_open_macros, registers, &instructions_table, &data_table);
     
 
-    //test prints:
-    for (int i = 0; i < instructions_table.size; i++) {
-        printf("line_num: %d, bin_str: %s\n", instructions_table.table[i].line_num, instructions_table.table[i].bin_str);
-    }
-
-    // Print the size of the array
-    printf("Size of the array: %d\n", instructions_table.size);
-
-    for (int i = 0; i < data_table.size; i++) {
-        printf("line_num: %d, bin_str: %s\n", data_table.table[i].line_num, data_table.table[i].bin_str);
-    }
-
-    // Print the size of the array
-    printf("Size of the array: %d\n", data_table.size);
+   
 
     int i;
     for(i=0; i < symbols_table.size; i++){
@@ -83,9 +70,58 @@ int main(){
     */
     reading_file_second_time(&symbols_table, &instructions_table ,instructions, p_file_open_macros);
 
+    FILE *binary_code_file = fopen("binary_code_file.txt", "w");
+    if(binary_code_file == NULL){
+        printf("Error: could not open file.\n");
+        return 1;
+    }
+
+    //test prints:
+    for (int i = 0; i < instructions_table.size; i++) {
+        get_length_and_converted_string(instructions_table.table[i].line_num, instructions_table.table[i].bin_str, binary_code_file);
+    }
+
+    // Print the size of the array
+    printf("Size of the array: %d\n", instructions_table.size);
+
+    for (int i = 0; i < data_table.size; i++) {
+        get_length_and_converted_string(data_table.table[i].line_num, data_table.table[i].bin_str, binary_code_file);
+    }
+
+    // Print the size of the array
+    printf("Size of the array: %d\n", data_table.size);
+
+
     fclose(p_file_open_macros); 
     free(symbols_table.symbol);
     free(instructions_table.table);
     free(data_table.table);
     
+}
+
+char* int_to_four_char_string(int input) {
+    static char output[5];
+    sprintf(output, "%04d", input);
+    return output;
+}
+
+void convert_to_dots_slashes(char *input, char *output) {
+    int i;
+    for (i = 0; i < strlen(input); i++) {
+        if (input[i] == '0') {
+            output[i] = '.';
+        } else if (input[i] == '1') {
+            output[i] = '/';
+        } else {
+            printf("Invalid input string!\n");
+            return;
+        }
+    }
+    output[i] = '\0';
+}
+
+void get_length_and_converted_string(int num, char *input, FILE *fp) {
+    char converted[strlen(input) + 1];
+    convert_to_dots_slashes(input, converted);
+    fprintf(fp, "%s\t%s\n", int_to_four_char_string(num), converted);
 }

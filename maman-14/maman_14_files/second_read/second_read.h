@@ -10,3 +10,9 @@ void create_entry_file(Array *entry_table, char *file_name);
 creates a file that holds all extern symbols and their lines. 
 */
 void create_extern_file(Array *table,Binary_table* instructions_table, char *file_name);
+
+/*
+updates unknown symbols from first read to binary
+*/
+void symbolToBinary(Binary_table *instructions_table, Array *symbols_table);
+

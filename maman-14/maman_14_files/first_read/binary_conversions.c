@@ -6,6 +6,7 @@
 
 
 char *pos_to_binary(unsigned int num, int bit_count) {
+    int i;
     /*Allocate memory for the binary string*/
     char *binary = (char*)malloc(bit_count + 1);
     if (binary == NULL) {
@@ -13,7 +14,7 @@ char *pos_to_binary(unsigned int num, int bit_count) {
         return NULL;
     }
     /*Convert the number to binary*/
-    int i;
+    
     for (i = 0; i < bit_count; i++) {
         binary[i] = '0';
     }

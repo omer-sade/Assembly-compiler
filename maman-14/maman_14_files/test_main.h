@@ -11,7 +11,7 @@
 #include "pre_assembler/pre_assembler.c"
 
 //REMOVE IT
-#include "second_read/second_read_bar.c"
+//#include "second_read/second_read_bar.c"
 
 /*
 Reads origing file and "opens" all macros. Prepares the code for it to be readable by "reading
@@ -36,3 +36,20 @@ void reading_file_second_time(Array *symbols_table, Binary_table *instructions_t
 adds all the 16 types of instructions to the instructions array (mov, not, jmp, etc..)
 */
 void add_data(char instructions[][LINE_SIZE]);
+
+/*
+converts integers to strings with four digits
+*/
+char* int_to_four_char_string(int input);
+
+/*
+converts binary code to slashes and dots
+*/
+void convert_to_dots_slashes(char *input, char *output);
+
+/*
+adds binary data (slashes and dots) to file
+*/
+void get_length_and_converted_string(int num, char *input, FILE *fp);
+
+

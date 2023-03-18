@@ -34,7 +34,7 @@ void reading_file_second_time(Array *symbols_table, Binary_table *instructions_t
    
     
     int error_counter = 0;
-    int extern_couner = 0;
+    int extern_counter = 0;
     Array entry_table;
     initArray(&entry_table);
   
@@ -52,19 +52,13 @@ void reading_file_second_time(Array *symbols_table, Binary_table *instructions_t
         if(is_data || is_string)
             continue;
         if(is_extern){
-            extern_couner ++;
+            extern_counter ++;
             continue;
         }
         if(is_entry){
             int temp = 0;
             add_Extern_Entry_Symbol(&entry_table,&error_counter, line, &temp);        
         }
-        else{
-            /*
-            convert line to binary
-            */
-        }
-        
     }
     
     int i, j;
@@ -90,11 +84,9 @@ void reading_file_second_time(Array *symbols_table, Binary_table *instructions_t
         printf("Errors found in file. Terminating program.\n");
         return;
     }    
-    /*
-    create binary file
-    */
-
-    if(extern_couner >0){
+  
+    
+    if(extern_counter >0){
         char *file_name = "externs.txt";
         create_extern_file(symbols_table, instructions_table, file_name);
     }
@@ -102,6 +94,8 @@ void reading_file_second_time(Array *symbols_table, Binary_table *instructions_t
         char *file_name = "entries.txt";
         create_entry_file(symbols_table, file_name);
     }
+
+    symbolToBinary(instructions_table, symbols_table);
     free(entry_table.symbol);
    
 }
@@ -149,4 +143,25 @@ void create_entry_file(Array *table, char *file_name){
         
     }
     fclose(entry_file);
+}
+
+void symbolToBinary(Binary_table *instructions_table, Array *symbols_table){
+    //test prints:
+    int line_num = 0;
+    char *temp_bin = (char*)calloc(15, sizeof(char));
+    int external = 0; //flag to check if it is external or local symbol
+    for (int i = 0; i < instructions_table->size; i++) {
+        if(instructions_table->table[i].bin_str[0] == '?'){ //get the symbol: &instructions_table->table[i].bin_str[1]
+            //printf("symb: %s\n", &instructions_table->table[i].bin_str[1]);
+            get_is_extern_and_line_num(symbols_table, &instructions_table->table[i].bin_str[1], &line_num, &external);
+            temp_bin = decimalToBinary(line_num, 12);
+            if(external==1){
+                strcat(temp_bin, "01");
+            }
+            else if(external==0){
+                strcat(temp_bin, "10");
+            }
+            strcpy(instructions_table->table[i].bin_str,temp_bin);
+        }
+    }
 }
