@@ -2,6 +2,7 @@
 
 
 int main(){
+   
     /*
     opening origin file
     */
@@ -80,7 +81,7 @@ int main(){
     /*
     reading file for the second time 
     */
-    reading_file_second_time(&symbols_table, instructions, p_file_open_macros);
+    reading_file_second_time(&symbols_table, &instructions_table ,instructions, p_file_open_macros);
 
     fclose(p_file_open_macros); 
     free(symbols_table.symbol);

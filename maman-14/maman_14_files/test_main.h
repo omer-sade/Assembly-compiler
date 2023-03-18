@@ -30,7 +30,7 @@ void reading_file_first_time(Array *symbols_table, const char **instructions, FI
 Converts ALL remaining lines to binary. 
 Reads from "pfile", writes binary language to "p_outputFile"
 */
-void reading_file_second_time(Array *symbols_table, const char **instructions, FILE *p_outputFile);
+void reading_file_second_time(Array *symbols_table, Binary_table *instructions_table, const char **instructions, FILE *p_outputFile);
 
 /*
 adds all the 16 types of instructions to the instructions array (mov, not, jmp, etc..)
