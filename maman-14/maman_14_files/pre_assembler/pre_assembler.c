@@ -58,7 +58,6 @@ void add_word(char *word, char *cont) {
 }
 
 void pre_assembler(FILE *file, FILE *output_file) {
-	
 	char line[MAX_LINE];/*line read from the original file (buffer)*/
 	char first_word[MAX_LINE];/*keeps the first word of a line*/
 	char second_word[MAX_LINE];/*keeps the line cont except the first word*/
@@ -87,7 +86,7 @@ void pre_assembler(FILE *file, FILE *output_file) {
 			to the list of macros*/
 			add_word(name, mcr_cont);
 			memset(name, 0, sizeof(name));
-			memset(mcr_cont, 0, sizeof(mcr_cont)); 
+			memset(mcr_cont, 0, sizeof(*mcr_cont)); 
 			mcr_flag = 0;
 			continue;
 		}

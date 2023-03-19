@@ -4,6 +4,10 @@
 int main(int argc, char *argv[]) {
     int i;
     char filename[100];
+    const char* instructions[] = {"mov", "cmp", "add", "sub","not","clr","lea",
+        "inc", "dec", "jmp", "bne", "red","prn","jsr","rts","stop", NULL};
+    
+    const char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7", NULL};
     for (i = 1; i < argc; i++) {
         FILE *ob_file;
         FILE *macroed_file;
@@ -49,9 +53,7 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        const char* instructions[] = {"mov", "cmp", "add", "sub","not","clr","lea",
-        "inc", "dec", "jmp", "bne", "red","prn","jsr","rts","stop", NULL};
-        const char* registers[] = {"r0","r1","r2","r3","r4","r5","r6","r7", NULL};
+        
 
         
 

@@ -34,12 +34,9 @@ void addArray(Array *arr, char *element, int *line_number, int type) {
     if (arr->size % 10 == 0) {
         arr->symbol = (Symbol *) realloc(arr->symbol, (arr->size + 10) * sizeof(Symbol));
     }
-   
-    
     s.ent = false;
     s.ext = false;
     s.line_num = -1;
-    /* s = {"", false, false, -1};*/
     strcpy(s.name, element);
     printf("symbol name = %s\n", s.name);
     s.line_num = *line_number;

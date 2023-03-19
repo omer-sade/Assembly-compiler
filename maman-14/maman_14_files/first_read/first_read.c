@@ -4,14 +4,26 @@
 
 
 
-	void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *instructions_table, Binary_table *data_table){
-    
+void reading_file_first_time(Array *symbols_table, const char **instructions, FILE *p_outputFile, const char** registers, Binary_table *instructions_table, Binary_table *data_table){
+    int i;
     int IC = 100; 
     int DC = 0;
     /*
-    every time we find an error - increment by 1. at the end if its value isnt 0 - stop the code. 
+    variables to check content of each line in file
+    */
+    bool isData;
+    bool isString;
+    bool isEntry;
+    bool isExtern;
+
+    /*
+    variables for tracking errors
     */
     int error_counter = 0;
+    int current_error_num;
+    bool valid_syntax;
+    bool valid_ascii_in_line;
+    
     /*
     changes to true if symbol is found in line
     */
@@ -31,10 +43,10 @@
         /*
         for tracking errors in specific line
         */
-        int current_error_num = error_counter;
-        bool valid_syntax = find_all_errors(line);
+        current_error_num = error_counter;
+        valid_syntax = find_all_errors(line);
         
-        bool valid_ascii_in_line = validate_ascii(line);
+        valid_ascii_in_line = validate_ascii(line);
         if(!valid_ascii_in_line || !valid_syntax){
             printf("Invalid syntax in line: %s\n",line);
             error_counter++;
@@ -46,11 +58,11 @@
         if(has_symbol(line, &error_counter))
             is_symbol_found = true;
         
-        bool isData = is_data(line, &error_counter);
-        bool isString = is_string(line, &error_counter);
+        isData = is_data(line, &error_counter);
+        isString = is_string(line, &error_counter);
 
-        bool isEntry = is_entry(line, &error_counter);
-        bool isExtern = is_extern(line, &error_counter);
+        isEntry = is_entry(line, &error_counter);
+        isExtern = is_extern(line, &error_counter);
         if(isData || isString){
             if(is_symbol_found && !isExtern){
                 addSymbol(symbols_table, &error_counter, line, &IC);
@@ -92,7 +104,7 @@
         }
     }
     /*updates data lines values to the end of the instructions lines*/
-    int i;
+    
     for (i = 0; i < data_table->size; i++) {
         data_table->table[i].line_num += IC;
     }
@@ -129,7 +141,7 @@ bool is_letter(char c){
 
 bool find_all_errors(const char *line){
     bool valid = true;
-    
+    int colon_index;
     char *hstg = strstr(line, "#");
     if(hstg != NULL){
         if(!(isdigit(hstg[1]) || (hstg[1] == '-' || hstg[1] == '+'))){
@@ -140,20 +152,16 @@ bool find_all_errors(const char *line){
     /*
     after a colon must come letter or number
     */
-    int colon_index = get_index_of(line, 58, 0);
+    colon_index = get_index_of(line, 58, 0);
     if(colon_index != -1){
         int next_char = get_first_char(line, colon_index+1);
         if(!(is_letter(line[next_char]) || isdigit(line[next_char]) || line[next_char] == '.'))
             valid = false;
     }
-    
-
-
     return valid;
 }
 
 bool validate_ascii(const char *line) {
-    const char *ptr = line;
     int i;
     for(i=0 ; i< strlen(line)-2; i++){
         char c = line[i];
@@ -169,7 +177,6 @@ bool validate_ascii(const char *line) {
 bool is_coma_last(const char *line){
     int i;
     for(i = strlen(line)-2; i > 0 ; i--){
-        char c = line[i];
         if(isspace(line[i]))
             continue;
         if(line[i] == 44)
@@ -183,19 +190,29 @@ bool is_coma_last(const char *line){
 
 bool has_symbol(const char *line, int *error_counter){
     int i = 0;
+    bool isValidSymbolName;
+    int index;
+    int colon_counter;
+    char *isExten;
+    char *isEntry;
+    int colon_index;
+    int last_space_index;
+    int first_char_index;
+    bool found_first_char;
+    bool error_found;
     /*
     if this is a comment line
     */
     if (line[0] == ';')
         return false;
     
-    int colon_counter = count(line, ':');
+    colon_counter = count(line, ':');
     /*
     checking how many ":" in line. if not 1, returns false
     */
-    char *isExten = strstr(line, ".extern");
-    char *isEntry = strstr(line, ".entry");
-    if(colon_counter == 0 && isEntry == NULL & isExten == NULL)
+    isExten = strstr(line, ".extern");
+    isEntry = strstr(line, ".entry");
+    if((colon_counter == 0) && (isEntry == NULL) & (isExten == NULL))
         return false;
     if(isExten || isEntry){
         return false;
@@ -208,7 +225,7 @@ bool has_symbol(const char *line, int *error_counter){
     /*
     finding the colon index (":" is 58 in ascii)
     */
-    int colon_index = get_index_of(line, 58, 0);
+    colon_index = get_index_of(line, 58, 0);
 
     if(colon_index == 0){
         printf("Invalid syntax in line: %s\n",line);
@@ -227,10 +244,10 @@ bool has_symbol(const char *line, int *error_counter){
     /*
     analyzing the line from index "0" to index "colon index"
     */
-   int last_space_index = -1;
-   int first_char_index = 0;
-   bool found_first_char = false;
-    bool error_found = false;
+    last_space_index = -1;
+    first_char_index = 0;
+    found_first_char = false;
+    error_found = false;
 
    for(i = 0; i < colon_index; i++){
         if(line[i] == 32)
@@ -246,7 +263,7 @@ bool has_symbol(const char *line, int *error_counter){
         }
    }
    
-   int index = first_char_index;
+    index = first_char_index;
     if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122)))
         error_found = true;
 
@@ -256,7 +273,7 @@ bool has_symbol(const char *line, int *error_counter){
     if( last_space_index > first_char_index)   
         error_found = true;
 
-    bool isValidSymbolName = is_valid_symbol_name(line, first_char_index, colon_index);
+    isValidSymbolName = is_valid_symbol_name(line, first_char_index, colon_index);
     if(!isValidSymbolName)
         error_found = true;
     
@@ -376,6 +393,12 @@ bool is_contains_number(char str[], int index){
 
 bool is_data(const char *line, int *error_counter)
 {
+    int i;
+    bool isValidSyntax;
+    int start_index;
+    int end_index;
+
+
     char *word = ".data";
     char *result = strstr(line, word);
     if( result == NULL){
@@ -385,8 +408,8 @@ bool is_data(const char *line, int *error_counter)
    start_index = starting index of ".data"
    end_index = end index of ".data"
    */
-    int start_index = result - line;
-    int end_index = start_index + 5;
+    start_index = result - line;
+    end_index = start_index + 5;
     
     if(line[end_index] != 32 && line[end_index] != 9){
         printf("Invalid syntax in line: %s\n",line);
@@ -400,7 +423,7 @@ bool is_data(const char *line, int *error_counter)
     looking for any syntax errors. we might have symbol before, so only allowed 
     characters are letters and numbers, white characters, and 1 colon
     */
-    int i;
+    
     if(start_index != 0){
         for(i = 0; i < start_index; i++){
                 if((line[i] >= 97 && line[i] <= 122) && (line[i] >= 65 && line[i] <= 90) && isdigit(line[i]) && line[i] != 58){
@@ -456,7 +479,7 @@ bool is_data(const char *line, int *error_counter)
             break;
     }
 
-    bool isValidSyntax = is_valid_syntax(line, start_index, end_index, error_counter);
+    isValidSyntax = is_valid_syntax(line, start_index, end_index, error_counter);
     if(isValidSyntax)
         return true;
     return false;
@@ -464,10 +487,15 @@ bool is_data(const char *line, int *error_counter)
     
 bool is_valid_syntax(const char *line, int start_index, int end_index, int *error_counter){
     /* "temp" holds parts from "line", used to validate line syntax in following loop*/
+    
     char temp[LINE_SIZE]; 
-    temp[0] = '\0';
-    int temp_index = 0;
     int i;
+    int j;
+    int k;
+    int temp_index = 0;
+    temp[0] = '\0';
+    
+    
     /*
     looping through "line" and looking for errors
     */
@@ -544,7 +572,7 @@ bool is_valid_syntax(const char *line, int start_index, int end_index, int *erro
                 return false;
             }
             else{
-                int j;
+                
                 for(j =0; j<= temp_index ; j ++){
                     temp[j] = '\0';
                 }
@@ -555,7 +583,7 @@ bool is_valid_syntax(const char *line, int start_index, int end_index, int *erro
         /*
         reset "temp"
         */
-        int k;
+        
         for(k =0; k<= temp_index ; k ++){
             temp[k] = '\0';
         }
@@ -591,6 +619,11 @@ bool is_comment(const char *line){
 
 bool is_string(const char *line, int *error_counter)
 {
+    int start_index;
+    int end_index;
+    int i;
+    int qm_counter;
+
     char *word = ".string";
     char *result = strstr(line, word);
     if( result == NULL){
@@ -601,8 +634,8 @@ bool is_string(const char *line, int *error_counter)
    start_index = starting index of ".string"
    end_index = end index of ".string"
    */
-    int start_index = result - line;
-    int end_index = start_index + 7;
+    start_index = result - line;
+    end_index = start_index + 7;
     /*
     checking that there's a space or tab afer ".string"
     */
@@ -615,8 +648,8 @@ bool is_string(const char *line, int *error_counter)
     /*
     checking that there are only 2 quotation marks (")
     */
-    int i; 
-    int qm_counter = 0;
+     
+    qm_counter = 0;
     for(i = end_index; i< strlen(line) ; i++){
         if(line[i] == 34)
             qm_counter ++;
@@ -683,19 +716,27 @@ bool is_numbers_or_letters(const char *line,int start, int end){
 }
 
 bool is_entry(const char *line, int *error_counter){
-    
+    int start_index; 
+    int end_index;
+    bool error_found;
+    int last_char_index;
+    int first_char_index;
+    int index;
+    bool isNumbersOrLetters;
+    bool isValidSymbolName;
+
     char *word = ".entry";
     char *result = strstr(line, word);
     if( result == NULL){
         return false;
     }
 
-   /*
-   start_index = starting index of ".entry"
-   end_index = end index of ".entry"
-   */
-    int start_index = result - line;
-    int end_index = start_index + 6;
+    /*
+    start_index = starting index of ".entry"
+    end_index = end index of ".entry"
+    */
+    start_index = result - line;
+    end_index = start_index + 6;
     
    
     /*
@@ -706,15 +747,15 @@ bool is_entry(const char *line, int *error_counter){
         *error_counter = *error_counter + 1;
         return false;
     }
-    bool error_found = false;
-    int last_char_index = get_last_char(line, strlen(line) -2);
-    int first_char_index = get_first_char(line, 6);
-    int index = first_char_index;
+    error_found = false;
+    last_char_index = get_last_char(line, strlen(line) -2);
+    first_char_index = get_first_char(line, 6);
+    index = first_char_index;
 
     if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122)))
         error_found = true;
 
-    bool isNumbersOrLetters = is_numbers_or_letters(line, first_char_index, last_char_index);
+    isNumbersOrLetters = is_numbers_or_letters(line, first_char_index, last_char_index);
     if(!isNumbersOrLetters)
         error_found = true;
     if(last_char_index -  first_char_index > 30)
@@ -724,7 +765,7 @@ bool is_entry(const char *line, int *error_counter){
     if(is_spaces(line, first_char_index, last_char_index))   
         error_found = true;
 
-    bool isValidSymbolName = is_valid_symbol_name(line, first_char_index, last_char_index);
+    isValidSymbolName = is_valid_symbol_name(line, first_char_index, last_char_index);
     if(!isValidSymbolName)
         error_found = true;
     

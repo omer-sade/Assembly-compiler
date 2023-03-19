@@ -9,6 +9,7 @@ char *pos_to_binary(unsigned int num, int bit_count) {
     int i;
     /*Allocate memory for the binary string*/
     char *binary = (char*)malloc(bit_count + 1);
+    int pos;
     if (binary == NULL) {
         printf("Error: Failed to allocate memory.\n");
         return NULL;
@@ -18,7 +19,7 @@ char *pos_to_binary(unsigned int num, int bit_count) {
     for (i = 0; i < bit_count; i++) {
         binary[i] = '0';
     }
-    int pos = bit_count - 1;
+    pos = bit_count - 1;
     while (num != 0 && pos >= 0) {
         if (num & 1) {
             binary[pos] = '1';
@@ -32,6 +33,8 @@ char *pos_to_binary(unsigned int num, int bit_count) {
 }
 
 char *neg_to_binary(int num, int bit_count) {
+    int pos;
+    int i;
     /*Allocate memory for the binary string*/
     char *binary = (char*)malloc(bit_count + 1);
     if (binary == NULL) {
@@ -39,11 +42,11 @@ char *neg_to_binary(int num, int bit_count) {
         return NULL;
     }
     /*Convert the number to binary using 2's complement*/
-    int i;
+    
     for (i = 0; i < bit_count; i++) {
         binary[i] = '0';
     }
-    int pos = bit_count - 1;
+    pos = bit_count - 1;
     while (num != 0 && pos >= 0) {
         if (num & 1) {
             binary[pos] = '1';
@@ -184,10 +187,11 @@ void data_to_binary(char* data, Binary_table *data_table, int *position, int *li
 }
 
 char* registers_addressing(char* orig_reg, char* dest_reg) {
-    char *final_line = malloc(sizeof(char) * 14);
-    final_line[0] = '\0';
     char* reg_part1;
     char* reg_part2;
+    char *final_line = malloc(sizeof(char) * 14);
+    final_line[0] = '\0';
+ 
     if(orig_reg == NULL) {
         /*only destination register exists*/
         reg_part1 = decimalToBinary(atoi(&dest_reg[1]),6);
@@ -218,8 +222,12 @@ char* registers_addressing(char* orig_reg, char* dest_reg) {
 
 void other_words(char* src_operand, char* dest_operand, const char** registers, \
 Binary_table *Instructions_table, int* line_num){
+    char *temp;
+    char *temp1;
+    char *temp2;
+    char *temp3;
     if(src_operand == NULL){ /*if only dest exists*/
-        char *temp = (char*)calloc(31, sizeof(char));
+        temp = (char*)calloc(31, sizeof(char));
         if(find_string(registers,dest_operand)!=-1){/*if dest a register*/
             temp = registers_addressing(NULL, dest_operand);
             addBinaryLine(Instructions_table, temp, line_num);
@@ -239,14 +247,13 @@ Binary_table *Instructions_table, int* line_num){
     }
     else if((find_string(registers,src_operand) != -1) && (find_string(registers,dest_operand) != -1)){
         /*if both registers*/
-        char *temp1;
         temp1 = registers_addressing(src_operand, dest_operand);
         addBinaryLine(Instructions_table, temp1, line_num);
         free(temp1);
         return;
     }
     else if(src_operand != NULL){ /*if src exists*/
-        char *temp2 = (char*)calloc(31, sizeof(char));
+        temp2 = (char*)calloc(31, sizeof(char));
         if(find_string(registers,src_operand)!=-1){/*if source a register*/
             temp2 = registers_addressing(src_operand, NULL);
             addBinaryLine(Instructions_table, temp2, line_num);
@@ -264,7 +271,7 @@ Binary_table *Instructions_table, int* line_num){
         }
         free(temp2);
     }
-    char *temp3 = (char*)calloc(31, sizeof(char));
+    temp3 = (char*)calloc(31, sizeof(char));
     if(find_string(registers,dest_operand)!=-1){/*if dest a register*/
         temp3 = registers_addressing(NULL, dest_operand);
         addBinaryLine(Instructions_table, temp3, line_num);
@@ -284,12 +291,14 @@ Binary_table *Instructions_table, int* line_num){
 
 void create_binary_from_line(const char *cur_line, const char** instructions, const char** registers, \
 Binary_table *instructions_table, Binary_table *data_table, int *IC, int *DC){
+    char temp[31] = {'?'};  /*for the unknown symbol*/
     const char* first_type[] = {"mov", "cmp", "add", "sub","lea", NULL}; /*2 operands*/
     const char* second_type[] = {"not","clr","inc", "dec", "jmp", "bne", "red","prn","jsr", NULL}; /*1 operand*/
     const char* third_type[] = {"rts","stop", NULL};/* 0 operands*/
-    const char* jump_addressing[] = {"jmp","bne","jsr", NULL};
     char *first_word = (char*)calloc(14, sizeof(char));
     char opecode[80], src_operand[80], dest_operand[80], line[80];
+    char *check_word;
+    char first_operand[80];
     char *ope_bin, *address_type, *params;
     int position = 0;
     strcpy(line, cur_line);
@@ -308,8 +317,7 @@ Binary_table *instructions_table, Binary_table *data_table, int *IC, int *DC){
         free(first_word);
     }
     else if(find_string(second_type, opecode) != -1){ /*second type of opecode*/
-        char *check_word;
-        char first_operand[80];
+        
         strcpy(first_operand,get_next_word(line, &position));
         if((check_word = get_next_word(line, &position)) != NULL){ /*jump addressing instruction*/
             strcpy(src_operand,check_word);
@@ -326,7 +334,7 @@ Binary_table *instructions_table, Binary_table *data_table, int *IC, int *DC){
             strcat(first_word, "00");/*bits 1-0*/
             addBinaryLine(instructions_table, first_word, IC);
             free(first_word);
-            char temp[31] = {'?'};  /*for the unknown symbol*/
+            
             strcat(temp, first_operand); 
             addBinaryLine(instructions_table, temp, IC);
             other_words(src_operand, dest_operand, registers, instructions_table, IC);
@@ -374,13 +382,19 @@ void initBinaryTable(Binary_table *tablePtr) {
 }
 
 void addBinaryLine(Binary_table *tablePtr, char *bin_str, int *line_num) {
+    Binary_line newLine;
+    newLine.line_num = *line_num;
+    strcpy(newLine.bin_str, "");
+    
+    /*Binary_line newLine = (Binary_line) {*line_num, ""};*/
+    
     /* Double the size of the array if necessary*/
     if (tablePtr->size % 10 == 0) {
         tablePtr->table = (Binary_line *) realloc(tablePtr->table, (tablePtr->size + 10) * sizeof(Binary_line));
     }
 
     /* Initialize the new binary_line element and add it to the array*/
-    Binary_line newLine = {*line_num, ""};
+    
     strncpy(newLine.bin_str, bin_str, 14); /* Copy the first 14 characters of the string*/
     tablePtr->table[tablePtr->size] = newLine;
 
