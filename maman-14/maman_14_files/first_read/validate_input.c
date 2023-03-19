@@ -3,24 +3,44 @@
 #include "validate_input.h"
 
 bool is_valid_line_opcode(const char *line){
-
+    int i;
     int start_index =0; 
     int end_index = 0; 
-    get_opcode_indexes(line, &start_index, &end_index);
+    /*
+    validating that each opcode gets proper operand type.
+    */
+    bool correct_operadns_type;
+    /*
+    will hold opcode value found in line
+    */
     char opcode[LINE_SIZE + 1]; 
+    /*
+    calc how many operands each opcode needs
+    */
+    int needed_operands_num;
+    /*
+    how many operands found in line
+    */
+    int acuall_operands_num;
+
+    /*
+    looking for illegal spaces
+    */
+    bool isValid;
+    get_opcode_indexes(line, &start_index, &end_index);
+    
 
     /*
      Copy substring to 'opcode' string
-    */
-    int i;
+    */ 
     for (i = start_index; i <= end_index - 1; i++) {
         opcode[i - start_index] = line[i];
     }
     opcode[i - start_index] = '\0';
    
-    int needed_operands_num = calc_needed_operands_num(opcode);
+    needed_operands_num = calc_needed_operands_num(opcode);
     
-    int acuall_operands_num = calc_acuall_operands_num(line, end_index);
+    acuall_operands_num = calc_acuall_operands_num(line, end_index);
     if(strcmp(opcode, "jsr") !=0 && strcmp(opcode, "bne") !=0 && strcmp(opcode, "jmp") !=0){
         if(needed_operands_num != acuall_operands_num)
             return false;
@@ -30,7 +50,7 @@ bool is_valid_line_opcode(const char *line){
     validating that operands doesnt have spaces.
     ex: mov r 4, r 5 --> return false
     */
-    bool isValid = false;
+    isValid = false;
     if(strcmp(opcode, "jsr") ==0 || strcmp(opcode, "bne") ==0 || strcmp(opcode, "jmp") ==0){
         isValid = validate_jsr_bne_jmp(line, end_index);
     }
@@ -44,7 +64,7 @@ bool is_valid_line_opcode(const char *line){
     if(!isValid)
         return false;
     
-    bool correct_operadns_type = validate_operands_type(line, opcode,  end_index);
+    correct_operadns_type = validate_operands_type(line, opcode,  end_index);
     if(!correct_operadns_type)
         return false;
     return true;
@@ -53,7 +73,6 @@ bool is_valid_line_opcode(const char *line){
 int get_index_of(const char *line, char target, int start){
     int i; 
     for(i = start; i < strlen(line); i++){
-        char c = line[i];
         if(line[i] == target)
             return i;
     }
@@ -71,9 +90,24 @@ int count(const char *line, char target){
 }
 
 bool validate_jsr_bne_jmp(const char *line, int index){
-    
+    bool spaces_in_symbol;
     int coma_counter = count(line, 44); 
     int i;
+    
+    /*
+    counters
+    */
+    int open_parnte;
+    int close_parente;
+
+    /*
+    variables to store specific char's index
+    */
+    int first_par_index;
+    int last_par_index;
+    int first_char_index;
+    int coma_index;
+    int last_char_index;
     
     if(coma_counter > 1)
         return false;
@@ -82,58 +116,28 @@ bool validate_jsr_bne_jmp(const char *line, int index){
         return check_valid_1_operand(line,"jmp", index);
     }
     else{
-        int open_parnte = count(line, 40);
-        int close_parente = count(line, 41);
+        open_parnte = count(line, 40);
+        close_parente = count(line, 41);
         if(open_parnte != 1 && close_parente != 1)
             return false;
-        int first_par_index = get_index_of(line, 40, index);
-        int last_par_index =  get_index_of(line, 41, index);
-        int first_char_index = get_first_char(line, index);
-        int coma_index = get_index_of(line, 44, index);
-        int last_char_index = -1;
+        first_par_index = get_index_of(line, 40, index);
+        last_par_index =  get_index_of(line, 41, index);
+        first_char_index = get_first_char(line, index);
+        coma_index = get_index_of(line, 44, index);
+        last_char_index = -1;
         for(i = first_par_index-1; i > first_char_index; i--){
             if(isspace(line[i]))
                 return false;
             last_char_index = i;
             break;
         }
-        bool spaces_in_symbol = is_contains_spaces(line, first_char_index, last_char_index);
+        spaces_in_symbol = is_contains_spaces(line, first_char_index, last_char_index);
         if(spaces_in_symbol)
             return false;
         if(!(first_par_index < last_par_index && first_par_index < coma_index && coma_index < last_par_index))
             return false;
         
-        /*
-        now we have to validate that there arent any spaces in first and second operands
-        */
-       int first_operand_first_char;
-       int first_operand_last_char;
-       int second_operand_first_char;
-       int second_operand_last_char;
-       for(i = first_par_index + 1; i < strlen(line); i ++){
-            if(isspace(line[i]))
-                continue;
-            first_operand_first_char = i;
-            break;
-       }
-       for(i = coma_index -1; i > first_par_index; i--){
-            if(isspace(line[i]))
-                continue;
-            first_operand_last_char = i;
-            break;
-       }
-       for(i = coma_index + 1; i < last_par_index; i++){
-            if(isspace(line[i]))
-                continue;
-            second_operand_first_char = i;
-            break;
-       }
-       for(i = last_par_index -1; i> first_par_index; i--){
-            if(isspace(line[i]))
-                continue;
-            second_operand_last_char = i;
-            break;
-       }
+       
        if(is_contains_spaces(line, first_char_index, last_par_index))
             return false;
       
@@ -176,14 +180,12 @@ bool validate_operands_type(const char *line,char opcode[], int index){
     char arr3[][5] ={"lea"};
     char arr4[][5] = {"not", "clr", "inc", "dec", "red"};
     char arr5[][5] = {"bne", "jsr", "jmp"};
-    char arr6[][5] = {"stop", "rts"};
 
     int arr1_size = sizeof(arr1) / sizeof(arr1[0]);
     int arr2_size = sizeof(arr2) / sizeof(arr2[0]);
     int arr3_size = sizeof(arr3) / sizeof(arr3[0]);
     int arr4_size = sizeof(arr4) / sizeof(arr4[0]);
     int arr5_size = sizeof(arr5) / sizeof(arr5[0]);
-    int arr6_size = sizeof(arr6) / sizeof(arr6[0]);
 
     int coma_index = get_index_of(line, 44, index);
     int first_operand_first_char = get_first_char(line, index);
@@ -236,10 +238,11 @@ bool validate_operands_type(const char *line,char opcode[], int index){
     */
     else if(contains(arr3,arr3_size, opcode)){
         bool isSymbol = is_symbol(line, first_operand_first_char, first_operand_last_char+1);
+        bool isRegi = is_register(line, second_operand_first_char,second_operand_last_char+1);
         if(!isSymbol)
             return false;
         isSymbol = is_symbol(line, second_operand_first_char, second_operand_last_char+1);
-        bool isRegi = is_register(line, second_operand_first_char,second_operand_last_char+1);
+        
         if(!(isSymbol || isRegi))
             return false;
     }
@@ -327,19 +330,19 @@ bool is_register(const char *line, int start, int end){
 }
 
 bool is_number (const char *line, int start, int end){
-    bool spaces = is_contains_spaces(line, start, end);
-    if(spaces)
-        return false;
-    
-    /*
+     /*
     num will be the number in line
     */
     char num[LINE_SIZE + 1]; 
+    int i;
+    bool spaces = is_contains_spaces(line, start, end);
+    if(spaces)
+        return false;
 
     /*
     Copy substring to 'num' string
     */ 
-    int i;
+    
     for (i = start; i <= end - 1; i++) {
         num[i - start] = line[i];
     }
@@ -369,15 +372,17 @@ bool is_number (const char *line, int start, int end){
 }
 
 bool is_symbol (const char *line, int start, int end){
+    int i;
+    bool hasSpaces;
     if(is_register(line, start,end))
         return false;
-    bool hasSpaces = is_contains_spaces(line, start, end);
+    hasSpaces = is_contains_spaces(line, start, end);
     if(hasSpaces)
         return false;
     if(!((line[start] >= 65 && line[start] <= 90) || (line[start] >= 97 && line[start] <= 122))){
         return false;
     }
-    int i; 
+   
     for( i = start; i < end; i++){
         if(!((line[i] >= 48 && line[i] <= 57) || (line[i] >= 65 && line[i] <= 90) || (line[i] >= 97 && line[i] <= 122))){
             return false;
@@ -389,7 +394,8 @@ bool is_symbol (const char *line, int start, int end){
 int calc_acuall_operands_num(const char *line, int index){
     int i = index;
     bool is_empty = true;
-    for(i; i< strlen(line); i ++){
+    int coma_counter = 0;
+    for(i = 0; i< strlen(line); i ++){
         if(!isspace(line[i])){
             is_empty = false;
             break;
@@ -398,10 +404,9 @@ int calc_acuall_operands_num(const char *line, int index){
     if(is_empty)
         return 0;
     
-    int coma_counter = 0;
+    
     i = index;
-    for(i; i < strlen(line); i ++){
-        char x = line[i];
+    for(i = 0; i < strlen(line); i ++){
         if(line[i] == 44)
             coma_counter ++;
     }
