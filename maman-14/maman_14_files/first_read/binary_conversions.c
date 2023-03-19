@@ -141,7 +141,7 @@ char *operands_params(char *orig, char *dest, const char** registers){
         else if(orig[0] == '#'){ /*Type 0*/
             strcpy(bit_str, "00");
         }
-        else{ //type 1
+        else{ /*type 1*/
             strcpy(bit_str, "01");
         }
     }
@@ -163,7 +163,8 @@ void string_to_binary(char* str, Binary_table *data_table, int *line_num){
     char* start = strchr(str, '\"');
 
     /* Loop over each character between the opening and closing quotes*/
-    for (char* p = start + 1; *p!='"'; p++) {
+    char *p;
+    for (p = start + 1; *p!='"'; p++) {
         char *temp;
         temp = decimalToBinary((int)*p,14);
         addBinaryLine(data_table, temp, line_num);

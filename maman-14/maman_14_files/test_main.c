@@ -5,18 +5,25 @@ int main(int argc, char *argv[]) {
     int i;
     char filename[100];
     for (i = 1; i < argc; i++) {
+        FILE *ob_file;
+        FILE *macroed_file;
+        FILE *as_file;
+        Binary_table data_table; /* Declare a new binary_table*/
         Array symbols_table; /*Declare a new symbols_table*/
+        Binary_table instructions_table; /* Declare a new binary_table */
+
         initArray(&symbols_table);/*initializes a new symbols_table*/
 
-        Binary_table instructions_table; /* Declare a new binary_table */
+        
         initBinaryTable(&instructions_table); /* Initialize the binary_table*/
 
-        Binary_table data_table; /* Declare a new binary_table*/
+       
         initBinaryTable(&data_table); /* Initialize the binary_table*/
 
         /*opening origin file*/
         sprintf(filename, "%s.as", argv[i]);
-        FILE *as_file = fopen(filename, "r"); 
+        
+        as_file = fopen(filename, "r"); 
         if (as_file == NULL) {
             printf("Error: Could not open file %s\n", filename);
             return 1;
@@ -24,7 +31,8 @@ int main(int argc, char *argv[]) {
 
         /*opening the file with all macros expanded. */
         sprintf(filename, "%s_macroed.as", argv[i]);
-        FILE *macroed_file = fopen(filename, "w"); 
+        
+        macroed_file = fopen(filename, "w"); 
         if (macroed_file == NULL) {
             printf("Error: Could not open file %s\n", filename);
             return 1;
@@ -62,7 +70,7 @@ int main(int argc, char *argv[]) {
 
         /* Open the .ob file for writing*/
         sprintf(filename, "%s.ob", argv[i]);
-        FILE *ob_file = fopen(filename, "w");
+        ob_file = fopen(filename, "w");
         if (ob_file == NULL) {
             printf("Error: Could not open file %s\n", filename);
             return 1;
@@ -100,16 +108,20 @@ void convert_to_dots_slashes(char *input, char *output) {
 }
 
 void get_length_and_converted_string(int num, char *input, FILE *fp) {
-    char converted[strlen(input) + 1];
+    int len = strlen(input) + 1;
+    char converted[len];
+    printf("len = %d\n", len);
+   
     convert_to_dots_slashes(input, converted);
     fprintf(fp, "%s\t%s\n", int_to_four_char_string(num), converted);
 }
 
 void build_object_file(Binary_table *instructions_table, Binary_table *data_table, FILE *object_file){
-    for (int i = 0; i < instructions_table->size; i++) { /*add the instruction lines*/
+    int i;
+    for (i = 0; i < instructions_table->size; i++) { /*add the instruction lines*/
         get_length_and_converted_string(instructions_table->table[i].line_num, instructions_table->table[i].bin_str, object_file);
     }
-    for (int i = 0; i < data_table->size; i++) {/*adds the data lines*/
+    for (i = 0; i < data_table->size; i++) {/*adds the data lines*/
         get_length_and_converted_string(data_table->table[i].line_num, data_table->table[i].bin_str, object_file);
     }
 }

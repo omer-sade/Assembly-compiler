@@ -79,7 +79,6 @@ writes binary numbers to output file based on current line.
 ex: "prn #-5": writes | 00001100000000 |  in output file.
                       | 11111111101100 |
 */
-//void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile);
 
 
 /*

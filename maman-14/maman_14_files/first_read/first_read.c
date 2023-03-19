@@ -92,7 +92,8 @@
         }
     }
     /*updates data lines values to the end of the instructions lines*/
-    for (int i = 0; i < data_table->size; i++) {
+    int i;
+    for (i = 0; i < data_table->size; i++) {
         data_table->table[i].line_num += IC;
     }
     /*
@@ -175,6 +176,7 @@ bool is_coma_last(const char *line){
             return true;
         return false;
     }
+    return false;
 }
 
 
@@ -583,6 +585,7 @@ bool is_comment(const char *line){
         else    
             return false;
     }
+    return true;
 }
 
 
@@ -743,19 +746,26 @@ bool is_spaces(const char *line, int start, int end){
 }
 
  bool is_extern(const char *line, int *error_counter){
-    
+    bool isValidSymbolName;
     char *word = ".extern";
+     /*
+   start_index = starting index of ".extern"
+   end_index = end index of ".extern"
+   */
+    int start_index;
+    int end_index;
+    int index;
+    bool error_found;
+    int last_char_index;
+    int first_char_index;
+    bool isNumbersOrLetters;
     char *result = strstr(line, word);
     if( result == NULL){
         return false;
     }
-
-   /*
-   start_index = starting index of ".extern"
-   end_index = end index of ".extern"
-   */
-    int start_index = result - line;
-    int end_index = start_index + 7;
+    start_index = result - line;
+    end_index = start_index + 6;
+  
     /*
     checking that there's a space or tab afer ".entry"
     */
@@ -764,15 +774,15 @@ bool is_spaces(const char *line, int start, int end){
         *error_counter = *error_counter + 1;
         return false;
     }
-    bool error_found = false;
-    int last_char_index = get_last_char(line, strlen(line) -2);
-    int first_char_index = get_first_char(line, 7);
-    int index = first_char_index;
+    error_found = false;
+    last_char_index = get_last_char(line, strlen(line) -2);
+    first_char_index = get_first_char(line, 7);
+    index = first_char_index;
 
     if(!((line[index] >= 65 && line[index] <= 90) || (line[index] >= 97 && line[index] <= 122)))
         error_found = true;
 
-    bool isNumbersOrLetters = is_numbers_or_letters(line, first_char_index, last_char_index);
+    isNumbersOrLetters = is_numbers_or_letters(line, first_char_index, last_char_index);
         if(!isNumbersOrLetters)
             error_found = true;
     if(last_char_index -  first_char_index > 30)
@@ -782,7 +792,7 @@ bool is_spaces(const char *line, int start, int end){
     if(is_spaces(line, first_char_index, last_char_index))   
         error_found = true;
 
-    bool isValidSymbolName = is_valid_symbol_name(line, first_char_index, last_char_index);
+    isValidSymbolName = is_valid_symbol_name(line, first_char_index, last_char_index);
     if(!isValidSymbolName)
         error_found = true;
     
@@ -796,7 +806,7 @@ bool is_spaces(const char *line, int start, int end){
 
 void find_symbol_indexes(const char *line, int  *start_index, int *end_index){
     int i=0;
-    for(i ; i < strlen(line); i++){
+    for(i=0 ; i < strlen(line); i++){
         if(isspace(line[i]))
             continue;
         break;
@@ -811,31 +821,44 @@ void find_symbol_indexes(const char *line, int  *start_index, int *end_index){
 }
 
 void find_external_symbol_indexes(const char *line, int *start, int *end){
-    int len = strlen(line);
+    int last_char;
     int first_char = get_first_char(line, 0);
     first_char += 7;
     first_char = get_first_char(line, first_char);
-    int last_char = get_last_char(line, strlen(line)-1);
+    last_char = get_last_char(line, strlen(line)-1);
     *start = first_char;
     *end = last_char +1;
 } 
 
 void find_entry_symbol_indexes(const char *line, int *start, int *end){
-    int len = strlen(line);
+    int last_char;
     int first_char = get_first_char(line, 0);
+    
     first_char += 6;
     first_char = get_first_char(line, first_char);
-    int last_char = get_last_char(line, strlen(line)-1);
+    last_char = get_last_char(line, strlen(line)-1);
     *start = first_char;
     *end = last_char +1;
 } 
 void add_Extern_Entry_Symbol(Array *symbols_table, int *error_counter, const char *line, int *line_num){
+    /*
+    symbol indexes
+    */
     int start_index;
     int end_index;
-    
-    char *isExtern = strstr(line, ".extern");
-    char *isEntry = strstr(line, ".entry");
+
+    char *isExtern;
+    /*
+    type of symbol
+    extern: 1
+    entry: 2
+    */
     int type = 0;
+    char symbol[LINE_SIZE+1];
+    int symbol_index;
+    int i;
+    isExtern = strstr(line, ".extern");
+
     if(isExtern != NULL){
         type = 1;
         find_external_symbol_indexes(line, &start_index, &end_index);
@@ -844,21 +867,19 @@ void add_Extern_Entry_Symbol(Array *symbols_table, int *error_counter, const cha
         type =2;
         find_entry_symbol_indexes(line, &start_index, &end_index);
     }
-        
-    
-    
-     char symbol[LINE_SIZE+1]; // define a character array with a fixed maximum length
-
-    // Copy substring to 'symbol' string
-    int i;
+     
+    /*
+     Copy substring to 'symbol' string
+    */
+   
     for (i = start_index; i <= end_index - 1; i++) {
         symbol[i - start_index] = line[i];
     }
     symbol[i - start_index] = '\0';
 
-    int index = searchArray(symbols_table, symbol);
+    symbol_index = searchArray(symbols_table, symbol);
 
-    if (index == -1){
+    if (symbol_index == -1){
         addArray(symbols_table, symbol, line_num, type);
     }
         
@@ -879,6 +900,16 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
 
     int start_index = 0;
     int end_index = 0;
+    int i;
+
+    /*
+    define a character array with a fixed maximum length
+    */
+    char symbol[LINE_SIZE+1]; 
+    /*
+    current symbol's index in symbols table
+    */
+    int symbol_index;
     char *isExtern = strstr(line, ".extern");
     char *isEntry = strstr(line, ".entry");
 
@@ -889,21 +920,18 @@ void addSymbol(Array *symbols_table, int *error_counter, const char *line, int *
     
     find_symbol_indexes(line, &start_index, &end_index);
 
-    char symbol[LINE_SIZE+1]; // define a character array with a fixed maximum length
-
-    // Copy substring to 'symbol' string
-    int i;
+    /*
+    Copy substring to 'symbol' string
+    */ 
     for (i = start_index; i <= end_index - 1; i++) {
         symbol[i - start_index] = line[i];
     }
     symbol[i - start_index] = '\0';
+    symbol_index = searchArray(symbols_table, symbol);
 
-    int index = searchArray(symbols_table, symbol);
-
-    if (index == -1){
+    if (symbol_index == -1){
         addArray(symbols_table, symbol, line_num, 0);
     }
-        
     else {
         printf("Error: multiple definitions of symbol '%s'\n", symbol);
         *error_counter = *error_counter + 1;
@@ -926,6 +954,28 @@ bool valid_instruct(const char *line, const char **instructions, int *error_coun
    */
    int colon_index = -1;
    int i;
+   int index;
+   /*
+   checking if opcode appears more than once in line
+   ex: "mov mov" --> count_sub is 2
+   */
+   int count_opcode;
+   /*
+   finding end index of line
+   */
+   int end_index;
+    /*
+    when finiding first char - changes to true, for finding index
+    */
+   bool found_char = false;
+   /*
+    start of line index (without white chars)
+   */
+   int start_index = -1;
+   /*
+   for saving opcode that is in current line
+   */
+   char *opcode;
    for (i = 0; i < strlen(line); i++){
         if(line[i] == 58){
             colon_index = i;
@@ -935,8 +985,8 @@ bool valid_instruct(const char *line, const char **instructions, int *error_coun
    /*
    if we didnt find a colon (symbol): start searching at index 0
    */
-   bool found_char = false;
-   int start_index = -1;
+   found_char = false;
+   start_index = -1;
     if(colon_index == -1){
         for(i = 0; i < strlen(line); i++){
             if(isspace(line[i]) && !found_char)
@@ -972,26 +1022,26 @@ bool valid_instruct(const char *line, const char **instructions, int *error_coun
             }
         }
     }
-    int end_index = i;
+    end_index = i;
     
     /*
     now we have start and end index of op code in line. start index is first char, end index is space/tab after op code
     now we need to copy substring to new variable and search it in symbols table
     */
     
-    char *opcode = malloc(end_index - start_index + 2);
+    opcode = malloc(end_index - start_index + 2);
 
     /*
     copy substring to copy string
     */ 
-    for (int i = start_index; i <= end_index -1; i++) {
+    for (i = start_index; i <= end_index -1; i++) {
         opcode[i - start_index] = line[i];
     }
     opcode[end_index - start_index] = '\0'; 
     /*
     now we need just to check if opcode is in symbols table
     */
-    int index = -1;
+    index = -1;
     for (i = 0; instructions[i] != NULL; i++){
          if (strcmp(instructions[i], opcode) == 0) {
             index = i;
@@ -1004,8 +1054,8 @@ bool valid_instruct(const char *line, const char **instructions, int *error_coun
         return false;
     }
 
-    int count = count_substring(line, opcode);
-    if(count != 1){
+    count_opcode = count_substring(line, opcode);
+    if(count_opcode != 1){
         free(opcode); 
         return false;
     }
@@ -1018,6 +1068,4 @@ int calc_binary_lines_num(const char *line){
     return -1;
 }
 
-// void create_binary_from_line(const char *line, int num_binary_lines, FILE *p_outputFile){
     
-// }

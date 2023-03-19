@@ -58,7 +58,7 @@ void add_word(char *word, char *cont) {
 }
 
 void pre_assembler(FILE *file, FILE *output_file) {
-	//int bit_location = 0;/*keeps the current file ptr location*/
+	
 	char line[MAX_LINE];/*line read from the original file (buffer)*/
 	char first_word[MAX_LINE];/*keeps the first word of a line*/
 	char second_word[MAX_LINE];/*keeps the line cont except the first word*/
