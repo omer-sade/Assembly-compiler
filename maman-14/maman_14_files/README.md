@@ -6,7 +6,16 @@ Summary: The code gets 1 or more input files written in assembley, and translate
 
 How to use: after typing 'make' in the terminal, run the command ./app (filename1) (filename2) ...
 
-main programs that are responsible to run the entire code:
+Input files: text files written in assembly (.as)
+
+Output files (for each input file):
+1. Binary code.
+2. Code after pre-assembler analysis (expands all macros).
+3. File that contains all Extern symbols (isn't created if there arent Extern symbols).
+4. File that contains all Entry symbols (isn't created if there arent Entry symbols).
+
+
+Main programs that are responsible to run the entire code:
 
 1. app.c: the main file that is responsible to run the entire program.
 2. pre_assembler.c: Runs on one input file and expands all of its macros.
