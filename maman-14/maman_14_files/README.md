@@ -4,7 +4,7 @@ A quick intro is found below.
 
 Summary: The code gets 1 or more input files written in assembley, and translate them into binary. 
 
-How to use: after typing 'make' in the terminal, run the command './app (filename1) (filename2) ...
+How to use: after typing 'make' in the terminal, run the command ./app (filename1) (filename2) ...
 
 main programs that are responsible to run the entire code:
 
