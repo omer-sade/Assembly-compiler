@@ -11,8 +11,8 @@ Input files: text files written in assembly (.as)
 Output files (for each input file):
 1. Binary code.
 2. Code after pre-assembler analysis (expands all macros).
-3. File that contains all Extern symbols (isn't created if there arent Extern symbols).
-4. File that contains all Entry symbols (isn't created if there arent Entry symbols).
+3. File that contains all Extern symbols (isn't created if there aren't Extern symbols).
+4. File that contains all Entry symbols (isn't created if there aren't Entry symbols).
 
 
 Main programs that are responsible to run the entire code:
