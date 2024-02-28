@@ -2,7 +2,7 @@ Welcome to my project!
 
 A quick intro is found below.
 
-Summary: The code gets 1 or more input files written in assembley, and translate them into binary. 
+Summary: The code gets 1 or more input files written in assembly, and translate them into binary. 
 
 How to use: after typing 'make' in the terminal, run the command ./app (filename1) (filename2) ...
 
@@ -23,7 +23,7 @@ Main programs that are responsible to run the entire code:
 4. second_read.c: reads file for the second time. Completes binary translation of all unknown symbols from the first read.
 
 Helper functions:
-1. validate_input.c: helps the 'first_read' file to validate that the input files are written in proper assembley.
+1. validate_input.c: helps the 'first_read' file to validate that the input files are written in proper assembly.
 2. data_structure.c: Has two very important structs. The first is 'Array' that saves all symbols, the second is 'Binary_table' that is used to save all the translated lines and their numbers.
 3. 'binary_conversions': Helps first and second read to translate a given line to binary.
  
